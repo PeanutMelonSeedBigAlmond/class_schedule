@@ -12,6 +12,7 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +38,7 @@ public class MainActivity extends BaseActivity {
     AlertDialog loginDialog;
 
     String account = "";
+    int currWeek=0;
 
     @SuppressLint("HandlerLeak")
     @Override
@@ -64,11 +66,13 @@ public class MainActivity extends BaseActivity {
                         Toast.makeText(MyApplication.getContext(), "登陆失败\n" + exception.toString(), Toast.LENGTH_SHORT).show();
                         break;
                     case 2:
-                        timetableView.setSource(NetWorkHelper.subjects);
-                        timetableView.setCurWeek(NetWorkHelper.weekIndex);
+                        timetableView.source(NetWorkHelper.subjects);
+                        timetableView.curWeek(currWeek=NetWorkHelper.weekIndex);
+                        Log.i("MainActivity", "handleMessage: current week " + NetWorkHelper.weekIndex);
                         swipeRefreshLayout.setRefreshing(false);
                         timetableView.showView();
-                        getSupportActionBar().setSubtitle("第 " + timetableView.getCurWeek() + " 周");
+                        getSupportActionBar().setSubtitle("第 " + timetableView.curWeek() + " 周");
+
                         break;
                     case -2:
                         swipeRefreshLayout.setRefreshing(false);
@@ -76,12 +80,13 @@ public class MainActivity extends BaseActivity {
                         Toast.makeText(MyApplication.getContext(), exception1.toString(), Toast.LENGTH_SHORT).show();
                         break;
                     case 3:
-                        timetableView.setSource(NetWorkHelper.subjects);
                         swipeRefreshLayout.setRefreshing(false);
-                        timetableView.changeWeek(NetWorkHelper.weekIndex,false);
+                        timetableView.source(NetWorkHelper.subjects);
                         timetableView.updateView();
-                        timetableView.updateDateView();
-                        getSupportActionBar().setSubtitle("第 " + timetableView.getCurWeek() + " 周");
+                        timetableView.onDateBuildListener().onUpdateDate(currWeek, NetWorkHelper.weekIndex);
+                        timetableView.changeWeekOnly(NetWorkHelper.weekIndex);
+                        Log.i("MainActivity", "handleMessage: jump to week " + NetWorkHelper.weekIndex);
+                        getSupportActionBar().setSubtitle("第 " + NetWorkHelper.weekIndex+ " 周");
                 }
             }
         };
@@ -90,10 +95,10 @@ public class MainActivity extends BaseActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (timetableView.getCurWeek() == 0) {
+                if (timetableView.curWeek() == 0) {
                     loadScheduleAtFirst();
                 } else {
-                    loadScheduleByWeekIndex(timetableView.getCurWeek());
+                    loadScheduleByWeekIndex(timetableView.curWeek());
                 }
             }
         });
@@ -184,7 +189,7 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 try {
                     NetWorkHelper.getSchedule(account, weekIndex);
-                    timetableView.setCurWeek(weekIndex);
+                    timetableView.curWeek(weekIndex);
                     handler.sendEmptyMessage(3);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -207,10 +212,10 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.mainMenuPreviousWeek:
-                loadScheduleByWeekIndex(timetableView.getCurWeek() - 1);
+                loadScheduleByWeekIndex(timetableView.curWeek() - 1);
                 break;
             case R.id.mainMenuNextWeek:
-                loadScheduleByWeekIndex(timetableView.getCurWeek() + 1);
+                loadScheduleByWeekIndex(timetableView.curWeek() + 1);
                 break;
             case R.id.mainMenuGoToCurrent:
                 loadScheduleAtFirst();

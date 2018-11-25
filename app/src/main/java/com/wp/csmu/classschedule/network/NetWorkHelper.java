@@ -56,19 +56,19 @@ public class NetWorkHelper {
         Request request = new Request.Builder().url(url).addHeader("token", token).get().build();
         Response response = client.newCall(request).execute();
         JSONObject jsonObject = new JSONObject(response.body().string());
-        try{
+        try {
             weekIndex = jsonObject.getInt("zc");
             endTime = jsonObject.getString("e_time");
             startTime = jsonObject.getString("s_time");
             termName = jsonObject.getString("xnxqh");
-        }catch (JSONException e){
-            Log.i("getCurrentWeek", "getCurrentWeek: "+e.getMessage());
-            if ("-1".equals(jsonObject.getString("token"))){
-                SharedPreferences sharedPreferences=MyApplication.getContext().getSharedPreferences("user",Context.MODE_PRIVATE);
-                String account=sharedPreferences.getString("account",null);
-                String password=sharedPreferences.getString("password",null);
-                if(account!=null&&password!=null){
-                    login(account,password);
+        } catch (JSONException e) {
+            Log.i("getCurrentWeek", "getCurrentWeek: " + e.getMessage());
+            if ("-1".equals(jsonObject.getString("token"))) {
+                SharedPreferences sharedPreferences = MyApplication.getContext().getSharedPreferences("user", Context.MODE_PRIVATE);
+                String account = sharedPreferences.getString("account", null);
+                String password = sharedPreferences.getString("password", null);
+                if (account != null && password != null) {
+                    login(account, password);
                     getCurrentWeek();
                 }
             }
@@ -76,7 +76,7 @@ public class NetWorkHelper {
         return weekIndex;
     }
 
-    public static void getSchedule(String account, int weekIndex) throws Exception {
+    public synchronized static void getSchedule(String account, int weekIndex) throws Exception {
         subjects.clear();
         NetWorkHelper.weekIndex = ((weekIndex == -1) ? getCurrentWeek() : weekIndex);
         String url = "http://jiaowu.csmu.edu.cn:8099/app.do?method=getKbcxAzc&xh=" + account + "&xnxqid=" + termName + "&zc=" + NetWorkHelper.weekIndex;
@@ -103,5 +103,4 @@ public class NetWorkHelper {
             NetWorkHelper.subjects.add(subjects);
         }
     }
-
 }
