@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">课程表</string>
+    <string name="navigation_drawer_open">开启</string>
+    <string name="navigation_drawer_close">关闭</string>
 </resources>

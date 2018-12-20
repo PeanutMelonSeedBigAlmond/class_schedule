@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mainDrawerClass"
+        android:checked="true"
+        android:checkable="true"
+        android:title="课程"
+        android:icon="@drawable/ic_schedule_black_24dp"/>
+    <item
+        android:id="@+id/mainDrawerHomePage"
+        android:checkable="false"
+        android:title="个人信息"
+        android:icon="@drawable/ic_homepage_black_24dp"/>
+</menu>

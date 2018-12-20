@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/mainDrawerLayout"
     tools:context=".activity.MainActivity">
 
     <android.support.constraint.ConstraintLayout
@@ -57,4 +58,11 @@
         </android.support.v4.widget.SwipeRefreshLayout>
     </android.support.constraint.ConstraintLayout>
 
+    <android.support.design.widget.NavigationView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:menu="@menu/main_drawerlayout_menu"
+        android:id="@+id/mainNavigationView"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_gravity="start"/>
 </android.support.v4.widget.DrawerLayout>

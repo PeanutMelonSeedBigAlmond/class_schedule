@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -102,5 +103,27 @@ public class NetWorkHelper {
 
             NetWorkHelper.subjects.add(subjects);
         }
+    }
+
+    public synchronized static String[] getHomepage(String account) throws Exception {
+        String[] info = new String[12];
+        FormBody formBody = new FormBody.Builder().add("userAccountType", "2").build();
+        Request request = new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getUserInfo&xh=" + account)
+                .addHeader("token", token).post(formBody).build();
+        Response response = client.newCall(request).execute();
+        JSONObject jsonObject = new JSONObject(response.body().string());
+        info[0] = jsonObject.getString("xm");
+        info[1] = jsonObject.getString("xh");
+        info[2] = jsonObject.getString("xb");
+        info[3] = jsonObject.getString("dh");
+        info[4] = jsonObject.getString("qq");
+        info[5] = jsonObject.getString("email");
+        info[6] = jsonObject.getString("yxmc");
+        info[7] = jsonObject.getString("zymc");
+        info[8] = jsonObject.getString("bj");
+        info[9] = jsonObject.getString("rxnf");
+        info[10] = jsonObject.getString("nj");
+        info[11] = jsonObject.getString("fxzy");
+        return info;
     }
 }

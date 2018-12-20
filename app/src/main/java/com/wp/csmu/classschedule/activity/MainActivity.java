@@ -4,12 +4,17 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -24,8 +29,6 @@ import com.wp.csmu.classschedule.application.MyApplication;
 import com.wp.csmu.classschedule.network.NetWorkHelper;
 import com.wp.csmu.classschedule.view.utils.BindView;
 import com.zhuangfei.timetable.TimetableView;
-import com.zhuangfei.timetable.listener.ISchedule;
-import com.zhuangfei.timetable.view.WeekView;
 
 public class MainActivity extends BaseActivity {
     @BindView(R.id.mainToolBar)
@@ -34,11 +37,17 @@ public class MainActivity extends BaseActivity {
     TimetableView timetableView;
     @BindView(R.id.mainSwipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
+    @BindView(R.id.mainDrawerLayout)
+    DrawerLayout drawerLayout;
+    @BindView(R.id.mainNavigationView)
+    NavigationView navigationView;
     Handler handler;
     AlertDialog loginDialog;
 
     String account = "";
-    int currWeek=0;
+    int currWeek = 0;
+
+    protected static boolean showDialog = false;
 
     @SuppressLint("HandlerLeak")
     @Override
@@ -67,7 +76,7 @@ public class MainActivity extends BaseActivity {
                         break;
                     case 2:
                         timetableView.source(NetWorkHelper.subjects);
-                        timetableView.curWeek(currWeek=NetWorkHelper.weekIndex);
+                        timetableView.curWeek(currWeek = NetWorkHelper.weekIndex);
                         Log.i("MainActivity", "handleMessage: current week " + NetWorkHelper.weekIndex);
                         swipeRefreshLayout.setRefreshing(false);
                         timetableView.showView();
@@ -86,12 +95,12 @@ public class MainActivity extends BaseActivity {
                         timetableView.onDateBuildListener().onUpdateDate(currWeek, NetWorkHelper.weekIndex);
                         timetableView.changeWeekOnly(NetWorkHelper.weekIndex);
                         Log.i("MainActivity", "handleMessage: jump to week " + NetWorkHelper.weekIndex);
-                        getSupportActionBar().setSubtitle("第 " + NetWorkHelper.weekIndex+ " 周");
+                        getSupportActionBar().setSubtitle("第 " + NetWorkHelper.weekIndex + " 周");
                 }
             }
         };
 
-        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimaryDark);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorAccent, R.color.colorPrimaryDark);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -102,8 +111,39 @@ public class MainActivity extends BaseActivity {
                 }
             }
         });
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.mainDrawerHomePage:
+                        startActivity(new Intent(MainActivity.this, HomepageActivity.class));
+                        drawerLayout.closeDrawers();
+                        break;
+                }
+                return true;
+            }
+        });
         init();
+        Log.i("MainActivity", "init1");
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("MainActivity", "onResume");
+        if (showDialog) {
+            init();
+            Log.i("MainActivity", "init2");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        showDialog = false;
+        super.onDestroy();
     }
 
     private void init() {
