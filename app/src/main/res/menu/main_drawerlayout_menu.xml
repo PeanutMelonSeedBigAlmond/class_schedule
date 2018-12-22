@@ -2,13 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/mainDrawerClass"
-        android:checked="true"
         android:checkable="true"
-        android:title="课程"
-        android:icon="@drawable/ic_schedule_black_24dp"/>
+        android:checked="true"
+        android:icon="@drawable/ic_schedule_black_24dp"
+        android:title="课程" />
     <item
         android:id="@+id/mainDrawerHomePage"
         android:checkable="false"
-        android:title="个人信息"
-        android:icon="@drawable/ic_homepage_black_24dp"/>
+        android:icon="@drawable/ic_homepage_black_24dp"
+        android:title="个人信息" />
+    <item
+        android:id="@+id/mainDrawerScore"
+        android:checkable="false"
+        android:icon="@drawable/ic_score_black_24dp"
+        android:title="考试成绩" />
 </menu>

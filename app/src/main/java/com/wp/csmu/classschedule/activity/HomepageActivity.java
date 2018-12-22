@@ -53,15 +53,14 @@ public class HomepageActivity extends BaseActivity {
     Handler handler;
     String[] info;
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homepage);
         setSupportActionBar(toolbar);
-        handler = new Handler() {
+        handler = new Handler(new Handler.Callback() {
             @Override
-            public void handleMessage(Message msg) {
+            public boolean handleMessage(Message msg) {
                 switch (msg.what) {
                     case -1:
                         swipeRefreshLayout.setRefreshing(false);
@@ -84,8 +83,9 @@ public class HomepageActivity extends BaseActivity {
                         secondMajor.setText(info[11]);
                         break;
                 }
+                return true;
             }
-        };
+        });
 
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorAccent, R.color.colorPrimaryDark);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {

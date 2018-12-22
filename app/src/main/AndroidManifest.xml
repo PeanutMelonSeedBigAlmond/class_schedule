@@ -22,8 +22,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".activity.ScoreActivity"></activity>
-        <activity android:name=".activity.HomepageActivity" />
+        <activity android:name=".activity.ScoreActivity"
+            android:label="考试成绩"/>
+        <activity android:name=".activity.HomepageActivity"
+            android:label="个人信息"/>
         <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

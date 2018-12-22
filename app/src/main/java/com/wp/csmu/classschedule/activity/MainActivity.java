@@ -1,6 +1,5 @@
 package com.wp.csmu.classschedule.activity;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,7 +9,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -41,6 +42,8 @@ public class MainActivity extends BaseActivity {
     DrawerLayout drawerLayout;
     @BindView(R.id.mainNavigationView)
     NavigationView navigationView;
+    @BindView(R.id.mainCoordinatorLayout)
+    CoordinatorLayout coordinatorLayout;
     Handler handler;
     AlertDialog loginDialog;
 
@@ -49,16 +52,14 @@ public class MainActivity extends BaseActivity {
 
     protected static boolean showDialog = false;
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar(toolbar);
-        handler = new Handler() {
+        handler = new Handler(new Handler.Callback() {
             @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
+            public boolean handleMessage(Message msg) {
                 switch (msg.what) {
                     case 1://登陆成功
                         loginDialog.getButton(Dialog.BUTTON_POSITIVE).setText("登陆");
@@ -86,7 +87,7 @@ public class MainActivity extends BaseActivity {
                     case -2:
                         swipeRefreshLayout.setRefreshing(false);
                         Exception exception1 = (Exception) msg.obj;
-                        Toast.makeText(MyApplication.getContext(), exception1.toString(), Toast.LENGTH_SHORT).show();
+                        Snackbar.make(coordinatorLayout, exception1.toString(), Snackbar.LENGTH_SHORT).show();
                         break;
                     case 3:
                         swipeRefreshLayout.setRefreshing(false);
@@ -97,8 +98,9 @@ public class MainActivity extends BaseActivity {
                         Log.i("MainActivity", "handleMessage: jump to week " + NetWorkHelper.weekIndex);
                         getSupportActionBar().setSubtitle("第 " + NetWorkHelper.weekIndex + " 周");
                 }
+                return true;
             }
-        };
+        });
 
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorAccent, R.color.colorPrimaryDark);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -120,6 +122,10 @@ public class MainActivity extends BaseActivity {
                 switch (item.getItemId()) {
                     case R.id.mainDrawerHomePage:
                         startActivity(new Intent(MainActivity.this, HomepageActivity.class));
+                        drawerLayout.closeDrawers();
+                        break;
+                    case R.id.mainDrawerScore:
+                        startActivity(new Intent(MainActivity.this, ScoreActivity.class));
                         drawerLayout.closeDrawers();
                         break;
                 }

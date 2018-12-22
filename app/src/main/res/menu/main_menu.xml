@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-<item android:id="@+id/mainMenuPreviousWeek"
-    android:title="上一周"
-    app:showAsAction="ifRoom"
-    android:icon="@drawable/ic_keyboard_arrow_left_white_24dp"/>
-    <item android:id="@+id/mainMenuNextWeek"
+    <item
+        android:id="@+id/mainMenuPreviousWeek"
+        android:icon="@drawable/ic_keyboard_arrow_left_white_24dp"
+        android:title="上一周"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/mainMenuNextWeek"
+        android:icon="@drawable/ic_keyboard_arrow_right_white_24dp"
         android:title="下一周"
-        app:showAsAction="ifRoom"
-        android:icon="@drawable/ic_keyboard_arrow_right_white_24dp"/>
-    <item android:id="@+id/mainMenuGoToCurrent"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/mainMenuGoToCurrent"
+        android:icon="@drawable/ic_refresh_white_24dp"
         android:title="回本周"
-        app:showAsAction="ifRoom"
-        android:icon="@drawable/ic_refresh_white_24dp"/>
+        app:showAsAction="ifRoom" />
 </menu>

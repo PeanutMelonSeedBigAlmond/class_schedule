@@ -5,12 +5,14 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.wp.csmu.classschedule.application.MyApplication;
+import com.wp.csmu.classschedule.view.bean.Score;
 import com.wp.csmu.classschedule.view.scheduletable.Subjects;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -125,5 +127,29 @@ public class NetWorkHelper {
         info[10] = jsonObject.getString("nj");
         info[11] = jsonObject.getString("fxzy");
         return info;
+    }
+
+    public synchronized static List<Score> getScore(String account) throws Exception {
+        List<Score>list=new ArrayList<>();
+        Request request=new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getCjcx&xh="+account)
+                .addHeader("token",token).get().build();
+        Response response=client.newCall(request).execute();
+        JSONObject jsonObject=new JSONObject(response.body().string());
+        JSONArray jsonArray=jsonObject.getJSONArray("result");
+        for(int i=0;i<jsonArray.length();i++){
+            JSONObject object=jsonArray.getJSONObject(i);
+            Score score=new Score();
+            score.setScore(object.getInt("zcj"));
+            score.setCredit(object.getInt("xf"));
+            score.setSubjectEnglish(object.getString("kcywmc"));
+            score.setSubjectAttribute(object.getString("kclbmc"));
+            score.setTerm(object.getString("xqmc"));
+            score.setSubject(object.getString("kcmc"));
+            score.setExamAttribute(object.getString("ksxzmc"));
+            score.setSubjectNature(object.getString("kcxzmc"));
+            score.setNote(object.getString("bz"));
+            list.add(score);
+        }
+        return list;
     }
 }
