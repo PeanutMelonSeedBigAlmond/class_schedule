@@ -129,9 +129,9 @@ public class NetWorkHelper {
         return info;
     }
 
-    public synchronized static List<Score> getScore(String account) throws Exception {
+    public synchronized static List<Score> getScore(String account,String selectedTerm) throws Exception {
         List<Score>list=new ArrayList<>();
-        Request request=new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getCjcx&xh="+account)
+        Request request=new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getCjcx&xh="+account+"&xnxqid="+selectedTerm)
                 .addHeader("token",token).get().build();
         Response response=client.newCall(request).execute();
         JSONObject jsonObject=new JSONObject(response.body().string());
@@ -151,5 +151,12 @@ public class NetWorkHelper {
             list.add(score);
         }
         return list;
+    }
+
+    public static JSONArray getTerms(String account) throws Exception {
+        Request request=new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getXnxq&xh="+account)
+                .addHeader("token",token).get().build();
+        Response response=client.newCall(request).execute();
+        return new JSONArray(response.body().string());
     }
 }

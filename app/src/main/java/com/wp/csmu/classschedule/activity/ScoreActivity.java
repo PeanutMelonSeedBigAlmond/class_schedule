@@ -14,6 +14,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -22,6 +24,9 @@ import com.wp.csmu.classschedule.network.NetWorkHelper;
 import com.wp.csmu.classschedule.view.adapter.ScoreRecyclerAdapter;
 import com.wp.csmu.classschedule.view.bean.Score;
 import com.wp.csmu.classschedule.view.utils.BindView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,22 +44,29 @@ public class ScoreActivity extends BaseActivity implements ScoreRecyclerAdapter.
     ScoreRecyclerAdapter adapter;
     List<Score> data;
 
+    String[]terms;
+    String[]termId;
+    String currentTermName;
+    String currentTermId;
+    int clickedItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_score);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         handler = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
                 switch (msg.what) {
                     case 0:
                         swipeRefreshLayout.setRefreshing(false);
-                        if(data.size()==0){
-                            Snackbar.make(coordinatorLayout,"暂无信息",Snackbar.LENGTH_SHORT).show();
-                        }else{
-                            adapter.updateData(data);
-                            recyclerView.scrollToPosition(0);
+                        adapter.updateData(data);
+                        recyclerView.scrollToPosition(0);
+                        getSupportActionBar().setSubtitle(terms[clickedItem]);
+                        if(data.size()==0) {
+                            Snackbar.make(coordinatorLayout, "暂无信息", Snackbar.LENGTH_SHORT).show();
                         }
                         break;
                     case -1:
@@ -78,7 +90,7 @@ public class ScoreActivity extends BaseActivity implements ScoreRecyclerAdapter.
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                getScore();
+                getScore1();
             }
         });
         getScore();
@@ -118,7 +130,76 @@ public class ScoreActivity extends BaseActivity implements ScoreRecyclerAdapter.
             @Override
             public void run() {
                 try {
-                    data = NetWorkHelper.getScore(account);
+                    JSONArray jsonArray=NetWorkHelper.getTerms(account);
+                    terms=new String[jsonArray.length()];
+                    termId=new String[jsonArray.length()];
+                    for(int i=0;i<jsonArray.length();i++){
+                        JSONObject jsonObject=jsonArray.getJSONObject(i);
+                        if ("1".equals(jsonObject.getString("isdqxq"))){
+                            clickedItem=i;
+                            currentTermName=jsonObject.getString("xqmc");
+                            currentTermId=jsonObject.getString("xnxq01id");
+                        }
+                        terms[i]=jsonObject.getString("xqmc");
+                        termId[i]=jsonObject.getString("xnxq01id");
+                    }
+                    data = NetWorkHelper.getScore(account,currentTermId);
+                    handler.sendEmptyMessage(0);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Message msg = new Message();
+                    msg.what = -1;
+                    msg.obj = e;
+                    handler.sendMessage(msg);
+                }
+            }
+        }).start();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.score_menu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.scoreMenuSelectTerm:
+                selectTerm();
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    void selectTerm(){
+        final AlertDialog.Builder build=new AlertDialog.Builder(this).setTitle("选择学期").setSingleChoiceItems(terms, clickedItem, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                clickedItem=which;
+                getScore1();
+                dialog.dismiss();
+            }
+        }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        build.show();
+    }
+
+    void getScore1() {
+        SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+        final String account = sharedPreferences.getString("account", "");
+        swipeRefreshLayout.setRefreshing(true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    data = NetWorkHelper.getScore(account,termId[clickedItem]);
                     handler.sendEmptyMessage(0);
                 } catch (Exception e) {
                     e.printStackTrace();

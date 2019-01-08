@@ -58,6 +58,7 @@ public class HomepageActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homepage);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         handler = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
