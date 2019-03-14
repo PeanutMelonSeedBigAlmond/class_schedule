@@ -126,7 +126,6 @@ public class HomepageActivity extends BaseActivity {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.clear();
                 editor.commit();
-                MainActivity.showDialog = true;
                 finish();
             }
         }).setNegativeButton("取消", new DialogInterface.OnClickListener() {

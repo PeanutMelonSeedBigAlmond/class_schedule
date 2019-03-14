@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     tools:context=".activity.LoginActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -46,7 +47,6 @@
             android:layout_height="wrap_content"
             android:hint="用户名/学号"
             android:maxLines="1"
-            android:password="false"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="313dp" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:hint="密码"
             android:maxLines="1"
-            android:password="true" />
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
@@ -84,4 +84,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/loginTextInputLayout2" />
 
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/loginCoordinatorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/loginProgressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loginButton"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

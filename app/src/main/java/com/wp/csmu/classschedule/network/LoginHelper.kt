@@ -13,16 +13,26 @@ object LoginHelper {
     val client=OkHttpClient()
     var cookie=""
     var termSelection = HashMap<String, String>()
+    @JvmStatic
     var schedules = ArrayList<Subjects>()
-    fun getCookie() {
+    private fun getCookie() {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/"
         val request = Request.Builder().url(url).get().build()
         val response = client.newCall(request).execute()
         cookie = response.header("Set-Cookie")!!
         //println(cookie)
     }
-
-    fun login(username:String, password:String) {
+    @Throws(Exception::class)
+    @JvmStatic
+    public fun getSchedule(account:String, password: String){
+        if (cookie==""){
+            getCookie()
+        }
+        login(account,password)
+        getSchedulePage()
+    }
+    @Throws(Exception::class)
+    private fun login(username:String, password:String) {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/xk/LoginToXk"
         val formBody = FormBody.Builder().add("encoded", encryptPassword(username, password)).build()
         val request = Request.Builder().url(url).addHeader("Cookie", cookie).post(formBody).build()
@@ -30,19 +40,20 @@ object LoginHelper {
         val document = Jsoup.parse(response.body()!!.string())
         if (document.title() == "学生个人中心")
             println("登录成功")
-        else
-            println("登录失败")
+        else{
+            throw Exception("登录失败")
+        }
     }
 
-    fun encryptPassword(username: String, password: String): String {
+    private fun encryptPassword(username: String, password: String): String {
         return String(Base64.encode(username.toByteArray(),Base64.DEFAULT)).plus("%%%")
                 .plus(String(Base64.encode(password.toByteArray(),Base64.DEFAULT)))
     }
 
-    fun getSchedulePage() {
+    private fun getSchedulePage() {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/xskb/xskb_list.do"
-        val formBody = FormBody.Builder().add("xnxq01id", "2018-2019-1").build()
-        val request = Request.Builder().url(url).header("Cookie", cookie).post(formBody).build()
+        //val formBody = FormBody.Builder().add("xnxq01id", "2018-2019-1").build()
+        val request = Request.Builder().url(url).header("Cookie", cookie).get().build()
         val response = client.newCall(request).execute()
         val document = Jsoup.parse(response.body()!!.string())
         /*********获取学期选择************/
@@ -58,7 +69,7 @@ object LoginHelper {
         getSchedule(scheduleDocument)
     }
 
-    fun getSchedule(htmlTable: Element) {
+    private fun getSchedule(htmlTable: Element) {
         val elements = htmlTable.selectFirst("tbody").select("tr")
         for (i in 1 until elements.size) {
             val classElements = elements[i].select("td").select("div[class=kbcontent]")
@@ -68,7 +79,7 @@ object LoginHelper {
         }
     }
 
-    fun parseSchedule(element: Element,currentDay:Int) {
+    private fun parseSchedule(element: Element,currentDay:Int) {
         val string = element.toString().replace(Regex("-{3,}"), "</div><div>")
         val document = Jsoup.parse(string)
         val elements = document.select("div")
@@ -115,7 +126,7 @@ object LoginHelper {
         }
     }
 
-    fun parseWeeks(text: String): Array<Int>? {
+    private fun parseWeeks(text: String): Array<Int>? {
         val pattern = Pattern.compile("(.*)\\(周\\).*")
         val matcher = pattern.matcher(text)
         if (matcher.find()) {
@@ -136,7 +147,7 @@ object LoginHelper {
         return null
     }
 
-    fun parseTimes(text: String): Array<Int>? {
+    private fun parseTimes(text: String): Array<Int>? {
         val pattern = Pattern.compile(".*\\[(.*)节]")
         val matcher = pattern.matcher(text)
         if (matcher.find()) {

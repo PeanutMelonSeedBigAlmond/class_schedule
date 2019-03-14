@@ -42,6 +42,6 @@ public class SplashActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE);
         final String account = sharedPreferences.getString("account", null);
         final String password = sharedPreferences.getString("password", null);
-        return account == null || password == null;
+        return !(account == null || password == null);
     }
 }
