@@ -1,8 +1,8 @@
 package com.wp.csmu.classschedule.view.scheduletable;
 
-import com.wp.csmu.classschedule.network.NetWorkHelper;
 import com.zhuangfei.timetable.model.Schedule;
 import com.zhuangfei.timetable.model.ScheduleEnable;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,25 @@ public class Subjects implements ScheduleEnable {
     int start;
     int step;
     String teacher;
+
+    public int getEnd() {
+        return end;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
+    int end;
+
+    public List<Integer> getWeeks() {
+        return weeks;
+    }
+
+    public void setWeeks(List<Integer> weeks) {
+        this.weeks = weeks;
+    }
+
     List<Integer> weeks = new ArrayList<>();
 
     public int getDay() {
@@ -74,7 +93,6 @@ public class Subjects implements ScheduleEnable {
         schedule.setStart(start);
         schedule.setTeacher(teacher);
         schedule.setStep(step);
-        weeks.add(NetWorkHelper.weekIndex);
         schedule.setWeekList(weeks);
         return schedule;
     }
