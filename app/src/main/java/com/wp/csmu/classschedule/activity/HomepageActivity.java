@@ -128,7 +128,7 @@ public class HomepageActivity extends BaseActivity {
                 editor.clear();
                 editor.commit();
                 finishAllActivity();
-                startActivity(new Intent(HomepageActivity.this,MainActivity.class));
+                startActivity(new Intent(HomepageActivity.this,LoginActivity.class));
             }
         }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override

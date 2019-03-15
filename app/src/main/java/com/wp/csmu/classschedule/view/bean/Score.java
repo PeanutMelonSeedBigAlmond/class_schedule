@@ -57,11 +57,11 @@ public class Score {
         this.credit = credit;
     }
 
-    public int getScore() {
+    public String getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(String score) {
         this.score = score;
     }
 
@@ -81,5 +81,5 @@ public class Score {
     String examAttribute;
     String subjectNature;
     int credit;
-    int score;
+    String score;
 }

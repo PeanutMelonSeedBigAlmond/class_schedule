@@ -108,47 +108,71 @@ public class NetWorkHelper {
     }
 
     public synchronized static String[] getHomepage(String account) throws Exception {
+        if (token.equals("")){
+            SharedPreferences sharedPreferences=MyApplication.getContext().getSharedPreferences("user",Context.MODE_PRIVATE);
+            login(account,sharedPreferences.getString("password",""));
+        }
         String[] info = new String[12];
         FormBody formBody = new FormBody.Builder().add("userAccountType", "2").build();
         Request request = new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getUserInfo&xh=" + account)
                 .addHeader("token", token).post(formBody).build();
         Response response = client.newCall(request).execute();
-        JSONObject jsonObject = new JSONObject(response.body().string());
-        info[0] = jsonObject.getString("xm");
-        info[1] = jsonObject.getString("xh");
-        info[2] = jsonObject.getString("xb");
-        info[3] = jsonObject.getString("dh");
-        info[4] = jsonObject.getString("qq");
-        info[5] = jsonObject.getString("email");
-        info[6] = jsonObject.getString("yxmc");
-        info[7] = jsonObject.getString("zymc");
-        info[8] = jsonObject.getString("bj");
-        info[9] = jsonObject.getString("rxnf");
-        info[10] = jsonObject.getString("nj");
-        info[11] = jsonObject.getString("fxzy");
+        try {
+            JSONObject jsonObject = new JSONObject(response.body().string());
+            info[0] = jsonObject.getString("xm");
+            info[1] = jsonObject.getString("xh");
+            info[2] = jsonObject.getString("xb");
+            info[3] = jsonObject.getString("dh");
+            info[4] = jsonObject.getString("qq");
+            info[5] = jsonObject.getString("email");
+            info[6] = jsonObject.getString("yxmc");
+            info[7] = jsonObject.getString("zymc");
+            info[8] = jsonObject.getString("bj");
+            info[9] = jsonObject.getString("rxnf");
+            info[10] = jsonObject.getString("nj");
+            info[11] = jsonObject.getString("fxzy");
+        }catch (JSONException e){
+            if (e.toString().contains("no value for")){
+                SharedPreferences sharedPreferences=MyApplication.getContext().getSharedPreferences("user",Context.MODE_PRIVATE);
+                login(account,sharedPreferences.getString("password",""));
+                info=getHomepage(account);
+            }
+        }
         return info;
     }
 
     public synchronized static List<Score> getScore(String account,String selectedTerm) throws Exception {
+        if (token.equals("")){
+            SharedPreferences sharedPreferences=MyApplication.getContext().getSharedPreferences("user",Context.MODE_PRIVATE);
+            login(account,sharedPreferences.getString("password",""));
+        }
         List<Score>list=new ArrayList<>();
         Request request=new Request.Builder().url("http://jiaowu.csmu.edu.cn:8099/app.do?method=getCjcx&xh="+account+"&xnxqid="+selectedTerm)
                 .addHeader("token",token).get().build();
         Response response=client.newCall(request).execute();
         JSONObject jsonObject=new JSONObject(response.body().string());
         JSONArray jsonArray=jsonObject.getJSONArray("result");
-        for(int i=0;i<jsonArray.length();i++){
-            JSONObject object=jsonArray.getJSONObject(i);
-            Score score=new Score();
-            score.setScore(object.getInt("zcj"));
-            score.setCredit(object.getInt("xf"));
-            score.setSubjectEnglish(object.getString("kcywmc"));
-            score.setSubjectAttribute(object.getString("kclbmc"));
-            score.setTerm(object.getString("xqmc"));
-            score.setSubject(object.getString("kcmc"));
-            score.setExamAttribute(object.getString("ksxzmc"));
-            score.setSubjectNature(object.getString("kcxzmc"));
-            score.setNote(object.getString("bz"));
-            list.add(score);
+        try {
+            for(int i=0;i<jsonArray.length();i++){
+                JSONObject object=jsonArray.getJSONObject(i);
+                Score score=new Score();
+                score.setScore(object.getString("zcj"));
+                score.setCredit(object.getInt("xf"));
+                score.setSubjectEnglish(object.getString("kcywmc"));
+                score.setSubjectAttribute(object.getString("kclbmc"));
+                score.setTerm(object.getString("xqmc"));
+                score.setSubject(object.getString("kcmc"));
+                score.setExamAttribute(object.getString("ksxzmc"));
+                score.setSubjectNature(object.getString("kcxzmc"));
+                score.setNote(object.getString("bz"));
+                list.add(score);
+            }
+        }catch (JSONException e){
+            if (e.toString().contains("no value for")){
+                SharedPreferences sharedPreferences=MyApplication.getContext().getSharedPreferences("user",Context.MODE_PRIVATE);
+                login(account,sharedPreferences.getString("password",""));
+               list=getScore(account,selectedTerm);
+            }
         }
         return list;
     }

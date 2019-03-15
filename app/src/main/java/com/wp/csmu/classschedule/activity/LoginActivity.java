@@ -40,7 +40,8 @@ public class LoginActivity extends BaseActivity {
                 case -1:
                     button.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
-                    Snackbar.make(coordinatorLayout, msg.obj.toString(), Snackbar.LENGTH_SHORT);
+                    textInputLayout2.setError("账号或密码错误");
+                    textInputLayout2.setErrorEnabled(true);
                     break;
                 case 0:
                     SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
@@ -76,6 +77,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void login() {
+        textInputLayout2.setErrorEnabled(false);
         final String account = textInputLayout1.getEditText().getText().toString().trim();
         final String password = textInputLayout2.getEditText().getText().toString().trim();
         button.setVisibility(View.GONE);
@@ -86,13 +88,14 @@ public class LoginActivity extends BaseActivity {
                 public void run() {
                     try {
                         LoginHelper.getSchedule(account, password);
+                        handler.sendEmptyMessage(0);
                     } catch (Exception e) {
                         Message message = new Message();
                         message.obj = e;
                         message.what = -1;
                         handler.sendMessage(message);
                     }
-                    handler.sendEmptyMessage(0);
+
                 }
             }).start();
         }

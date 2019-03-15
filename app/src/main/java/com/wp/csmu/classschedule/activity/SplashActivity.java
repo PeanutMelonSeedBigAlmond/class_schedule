@@ -35,7 +35,7 @@ public class SplashActivity extends AppCompatActivity {
         if (!checkAccount()){
             flag=1;
         }
-        handle.sendEmptyMessageDelayed(flag,1500);
+        handle.sendEmptyMessageDelayed(flag,300);
     }
 
     private boolean checkAccount(){

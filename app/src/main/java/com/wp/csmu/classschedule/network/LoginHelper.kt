@@ -1,6 +1,7 @@
 package com.wp.csmu.classschedule.network
 
 import android.util.Base64
+import android.util.Log
 import com.wp.csmu.classschedule.view.scheduletable.Subjects
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
@@ -38,9 +39,10 @@ object LoginHelper {
         val request = Request.Builder().url(url).addHeader("Cookie", cookie).post(formBody).build()
         val response = client.newCall(request).execute()
         val document = Jsoup.parse(response.body()!!.string())
-        if (document.title() == "学生个人中心")
+        if (document.title() .equals("学生个人中心")){
             println("登录成功")
-        else{
+        }else{
+            Log.i("LoginHelper",document.title())
             throw Exception("登录失败")
         }
     }

@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -16,13 +19,20 @@ import com.wp.csmu.classschedule.utils.DateUtils;
 import com.wp.csmu.classschedule.view.scheduletable.Subjects;
 import com.wp.csmu.classschedule.view.utils.BindView;
 import com.zhuangfei.timetable.TimetableView;
+import com.zhuangfei.timetable.listener.OnItemClickAdapter;
+import com.zhuangfei.timetable.model.Schedule;
+
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -56,6 +66,9 @@ public class MainActivity extends BaseActivity {
         }else {
             importSchedule();
         }
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -69,6 +82,12 @@ public class MainActivity extends BaseActivity {
                 }
                 drawerLayout.closeDrawers();
                 return true;
+            }
+        });
+        timetableView.callback(new OnItemClickAdapter(){
+            @Override
+            public void onItemClick(View v, List<Schedule> scheduleList) {
+                showScheduleInfo(scheduleList.get(0));
             }
         });
     }
@@ -151,5 +170,32 @@ public class MainActivity extends BaseActivity {
         Log.i("MainActivity","菜单被选择");
         getSupportActionBar().setSubtitle("第"+targetWeek+"周");
         return true;
+    }
+
+    private void showScheduleInfo(Schedule schedule){
+        String name=schedule.getName();
+        String room=schedule.getRoom();
+        String teacher=schedule.getTeacher();
+        List<Integer>weekList=schedule.getWeekList();
+        StringBuilder stringBuilder=new StringBuilder();
+        for (int i=0;i<weekList.size();i++){
+            stringBuilder.append(weekList.get(i));
+            if (i!=weekList.size()-1){
+                stringBuilder.append(", ");
+            }else {
+                stringBuilder.append(" 周");
+            }
+        }
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setTitle(name);
+        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
+        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
+        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
+        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
+        t1.setText(stringBuilder);
+        t2.setText(teacher);
+        t3.setText(room);
+        builder.setView(view);
+        builder.create().show();
     }
 }
