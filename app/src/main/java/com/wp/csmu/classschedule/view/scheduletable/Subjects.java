@@ -3,18 +3,20 @@ package com.wp.csmu.classschedule.view.scheduletable;
 import com.zhuangfei.timetable.model.Schedule;
 import com.zhuangfei.timetable.model.ScheduleEnable;
 
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Subjects implements ScheduleEnable {
-    int day;
-    String name;
-    String room;
-    int start;
-    int step;
-    String teacher;
-
+public class Subjects implements ScheduleEnable, Serializable {
+    private int day;
+    private String name;
+    private String room;
+    private int start;
+    private int step;
+    private String teacher;
+    private int end;
+    private List<Integer> weeks = new ArrayList<>();
+    private static final long serialVersionUID=0xabcdefL;
     public int getEnd() {
         return end;
     }
@@ -23,8 +25,6 @@ public class Subjects implements ScheduleEnable {
         this.end = end;
     }
 
-    int end;
-
     public List<Integer> getWeeks() {
         return weeks;
     }
@@ -32,8 +32,6 @@ public class Subjects implements ScheduleEnable {
     public void setWeeks(List<Integer> weeks) {
         this.weeks = weeks;
     }
-
-    List<Integer> weeks = new ArrayList<>();
 
     public int getDay() {
         return day;

@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wp.csmu.classschedule.R;
+import com.wp.csmu.classschedule.io.IO;
 import com.wp.csmu.classschedule.network.LoginHelper;
 import com.wp.csmu.classschedule.view.utils.BindView;
 
@@ -44,8 +45,16 @@ public class LoginActivity extends BaseActivity {
                 case 0:
                     SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    editor.putString("account",textInputLayout1.getEditText().getText().toString().trim());
+                    editor.putString("password",textInputLayout2.getEditText().getText().toString().trim());
+                    editor.commit();
+                    try {
+                        IO.writeSchedule(LoginHelper.getSchedules());
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Snackbar.make(coordinatorLayout,"导入失败\n"+e.toString(),Snackbar.LENGTH_SHORT).show();
+                    }
                     finish();
             }
             return true;

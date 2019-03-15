@@ -2,6 +2,7 @@ package com.wp.csmu.classschedule.activity;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -126,7 +127,8 @@ public class HomepageActivity extends BaseActivity {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.clear();
                 editor.commit();
-                finish();
+                finishAllActivity();
+                startActivity(new Intent(HomepageActivity.this,MainActivity.class));
             }
         }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
