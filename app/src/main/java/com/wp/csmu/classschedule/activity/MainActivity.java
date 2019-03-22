@@ -173,29 +173,29 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showScheduleInfo(Schedule schedule){
-        String name=schedule.getName();
-        String room=schedule.getRoom();
-        String teacher=schedule.getTeacher();
-        List<Integer>weekList=schedule.getWeekList();
-        StringBuilder stringBuilder=new StringBuilder();
-        for (int i=0;i<weekList.size();i++){
-            stringBuilder.append(weekList.get(i));
-            if (i!=weekList.size()-1){
-                stringBuilder.append(", ");
-            }else {
-                stringBuilder.append(" 周");
-            }
-        }
-        AlertDialog.Builder builder=new AlertDialog.Builder(this);
-        builder.setTitle(name);
-        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
-        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
-        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
-        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
-        t1.setText(stringBuilder);
-        t2.setText(teacher);
-        t3.setText(room);
-        builder.setView(view);
-        builder.create().show();
+//        String name=schedule.getName();
+//        String room=schedule.getRoom();
+//        String teacher=schedule.getTeacher();
+//        List<Integer>weekList=schedule.getWeekList();
+//        StringBuilder stringBuilder=new StringBuilder();
+//        for (int i=0;i<weekList.size();i++){
+//            stringBuilder.append(weekList.get(i));
+//            if (i!=weekList.size()-1){
+//                stringBuilder.append(", ");
+//            }else {
+//                stringBuilder.append(" 周");
+//            }
+//        }
+//        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+//        builder.setTitle(name);
+//        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
+//        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
+//        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
+//        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
+//        t1.setText(stringBuilder);
+//        t2.setText(teacher);
+//        t3.setText(room);
+//        builder.setView(view);
+//        builder.create().show();
     }
 }
