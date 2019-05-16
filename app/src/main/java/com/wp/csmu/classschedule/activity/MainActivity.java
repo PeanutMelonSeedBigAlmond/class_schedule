@@ -1,5 +1,6 @@
 package com.wp.csmu.classschedule.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -27,6 +28,7 @@ import org.w3c.dom.Text;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -39,7 +41,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends BaseActivity {
-    ArrayList<Subjects> subjects;
+    HashSet<Subjects> subjects;
     int currentWeek;
     int targetWeek;
     @BindView(R.id.mainSwipeRefreshLayout)
@@ -79,6 +81,9 @@ public class MainActivity extends BaseActivity {
                     case R.id.mainDrawerScore:
                         startActivity(new Intent(MainActivity.this,ScoreActivity.class));
                         break;
+                    case R.id.mainDrawerRefresh:
+                        refreshSchedule();
+                        break;
                 }
                 drawerLayout.closeDrawers();
                 return true;
@@ -87,7 +92,14 @@ public class MainActivity extends BaseActivity {
         timetableView.callback(new OnItemClickAdapter(){
             @Override
             public void onItemClick(View v, List<Schedule> scheduleList) {
-                showScheduleInfo(scheduleList.get(0));
+                for (Schedule schedule:scheduleList){
+                    if (schedule.getWeekList().contains(Integer.valueOf(toolbar.getSubtitle().toString().substring(1,toolbar.getSubtitle().toString().length()-1))))
+                    {
+                        Log.i("课程",schedule.getName()+"\t"+schedule.getTeacher());
+                        showScheduleInfo(schedule);
+                        break;
+                    }
+                }
             }
         });
     }
@@ -112,7 +124,7 @@ public class MainActivity extends BaseActivity {
                             swipeRefreshLayout.setRefreshing(false);
                             readSchedule();
                             timetableView.curWeek(currentWeek);
-                            timetableView.source(subjects);
+                            timetableView.source(new ArrayList<>(subjects));
                             timetableView.showView();
                         }
                     });
@@ -125,7 +137,6 @@ public class MainActivity extends BaseActivity {
                         }
                     });
                 }
-
             }
         }).start();
     }
@@ -134,7 +145,7 @@ public class MainActivity extends BaseActivity {
         try {
             subjects=IO.readSchedule();
             timetableView.curWeek(currentWeek);
-            timetableView.source(subjects);
+            timetableView.source(new ArrayList<>(subjects));
             timetableView.showView();
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,29 +184,73 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showScheduleInfo(Schedule schedule){
-//        String name=schedule.getName();
-//        String room=schedule.getRoom();
-//        String teacher=schedule.getTeacher();
-//        List<Integer>weekList=schedule.getWeekList();
-//        StringBuilder stringBuilder=new StringBuilder();
-//        for (int i=0;i<weekList.size();i++){
-//            stringBuilder.append(weekList.get(i));
-//            if (i!=weekList.size()-1){
-//                stringBuilder.append(", ");
-//            }else {
-//                stringBuilder.append(" 周");
-//            }
-//        }
-//        AlertDialog.Builder builder=new AlertDialog.Builder(this);
-//        builder.setTitle(name);
-//        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
-//        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
-//        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
-//        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
-//        t1.setText(stringBuilder);
-//        t2.setText(teacher);
-//        t3.setText(room);
-//        builder.setView(view);
-//        builder.create().show();
+        String name=schedule.getName();
+        String room=schedule.getRoom();
+        String teacher=schedule.getTeacher();
+        List<Integer>weekList=schedule.getWeekList();
+        StringBuilder stringBuilder=new StringBuilder();
+        for (int i=0;i<weekList.size();i++){
+            stringBuilder.append(weekList.get(i));
+            if (i!=weekList.size()-1){
+                stringBuilder.append(", ");
+            }else {
+                stringBuilder.append(" 周");
+            }
+        }
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setTitle(name);
+        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
+        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
+        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
+        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
+        t1.setText(stringBuilder);
+        t2.setText(teacher);
+        t3.setText(room);
+        builder.setView(view);
+        builder.create().show();
+    }
+
+    private void refreshSchedule(){
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setMessage("刷新课程表？（需要网络）").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                reloadSchedule();
+            }
+        }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        }).show();
+    }
+
+    private void reloadSchedule(){
+        SharedPreferences sharedPreferences=getSharedPreferences("user",MODE_PRIVATE);
+        final String account=sharedPreferences.getString("account","");
+        final String password=sharedPreferences.getString("password","");
+        swipeRefreshLayout.setRefreshing(true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    LoginHelper.getSchedule(account,password);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            swipeRefreshLayout.setRefreshing(false);
+                            readSchedule();
+                            timetableView.curWeek(currentWeek);
+                            timetableView.source(new ArrayList<>(subjects));
+                            timetableView.showView();
+                            Snackbar.make(coordinatorLayout,"刷新成功",Snackbar.LENGTH_SHORT).show();
+                        }
+                    });
+                }catch (Exception e){
+                    swipeRefreshLayout.setRefreshing(false);
+                    Snackbar.make(coordinatorLayout,"刷新失败\n"+e.toString(),Snackbar.LENGTH_SHORT).show();
+                }
+            }
+        }).start();
     }
 }

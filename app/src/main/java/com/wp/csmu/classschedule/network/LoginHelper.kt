@@ -15,7 +15,7 @@ object LoginHelper {
     var cookie=""
     var termSelection = HashMap<String, String>()
     @JvmStatic
-    var schedules = ArrayList<Subjects>()
+    var schedules = HashSet<Subjects>()
     private fun getCookie() {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/"
         val request = Request.Builder().url(url).get().build()
@@ -24,6 +24,7 @@ object LoginHelper {
         //println(cookie)
     }
     @Throws(Exception::class)
+
     @JvmStatic
     public fun getSchedule(account:String, password: String){
         if (cookie==""){
@@ -32,6 +33,7 @@ object LoginHelper {
         login(account,password)
         getSchedulePage()
     }
+
     @Throws(Exception::class)
     private fun login(username:String, password:String) {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/xk/LoginToXk"

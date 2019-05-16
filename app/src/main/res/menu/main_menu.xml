@@ -13,7 +13,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/mainMenuGoToCurrent"
-        android:icon="@drawable/ic_refresh_white_24dp"
+        android:icon="@drawable/ic_home_white_24dp"
         android:title="回本周"
         app:showAsAction="ifRoom" />
 </menu>

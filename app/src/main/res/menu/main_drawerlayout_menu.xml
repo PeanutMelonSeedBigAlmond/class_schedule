@@ -16,4 +16,9 @@
         android:checkable="false"
         android:icon="@drawable/ic_score_black_24dp"
         android:title="考试成绩" />
+    <item
+        android:id="@+id/mainDrawerRefresh"
+        android:checkable="false"
+        android:icon="@drawable/ic_refresh_black_24dp"
+        android:title="刷新课程"/>
 </menu>
