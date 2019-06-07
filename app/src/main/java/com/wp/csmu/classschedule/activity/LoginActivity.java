@@ -50,7 +50,12 @@ public class LoginActivity extends BaseActivity {
                     editor.putString("password",textInputLayout2.getEditText().getText().toString().trim());
                     editor.commit();
                     try {
+                        //写入课程
                         IO.writeSchedule(LoginHelper.getSchedules());
+                        //写入开学时间
+                        SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
+                        SharedPreferences.Editor editor1 = sharedPreferences.edit();
+                        editor1.putString("term_begins_time", LoginHelper.getTermBeginsTime());
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -95,7 +100,6 @@ public class LoginActivity extends BaseActivity {
                         message.what = -1;
                         handler.sendMessage(message);
                     }
-
                 }
             }).start();
         }

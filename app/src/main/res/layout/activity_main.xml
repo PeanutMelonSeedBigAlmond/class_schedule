@@ -73,6 +73,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:menu="@menu/main_drawerlayout_menu" />
 </androidx.drawerlayout.widget.DrawerLayout>

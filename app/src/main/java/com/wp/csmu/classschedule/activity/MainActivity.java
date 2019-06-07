@@ -23,11 +23,11 @@ import com.zhuangfei.timetable.TimetableView;
 import com.zhuangfei.timetable.listener.OnItemClickAdapter;
 import com.zhuangfei.timetable.model.Schedule;
 
-import org.w3c.dom.Text;
-
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -56,12 +56,27 @@ public class MainActivity extends BaseActivity {
     NavigationView navigationView;
     @BindView(R.id.mainDrawerLayout)
     DrawerLayout drawerLayout;
+
+    String termBeginsTime;
+    boolean showWeekday;
+    int classesOfDay;
+    int weeksOfTerm;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar(toolbar);
-        targetWeek=currentWeek= DateUtils.getCurrentWeek("2019-2-25");
+        SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
+        termBeginsTime = sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        showWeekday = sharedPreferences.getBoolean("show_weekday", true);
+        classesOfDay = sharedPreferences.getInt("classes_of_day", 10);
+        weeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek));
+
+        targetWeek = currentWeek = DateUtils.getCurrentWeek(termBeginsTime);
+        timetableView.isShowWeekends(showWeekday);
+        timetableView.maxSlideItem(classesOfDay);
+
         getSupportActionBar().setSubtitle("第"+currentWeek+"周");
         if (checkSchedule()){
             readSchedule();
@@ -84,6 +99,9 @@ public class MainActivity extends BaseActivity {
                     case R.id.mainDrawerRefresh:
                         refreshSchedule();
                         break;
+                    case R.id.mainDrawerSetting:
+                        startActivity(new Intent(MainActivity.this, SettingActivity.class));
+                        break;
                 }
                 drawerLayout.closeDrawers();
                 return true;
@@ -105,8 +123,10 @@ public class MainActivity extends BaseActivity {
     }
 
     boolean checkSchedule() {
+        //检查开学时间是否存在
+        SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
         File file = new File(IO.scheduleFile);
-        return file.exists();
+        return file.exists() && sharedPreferences.contains("term_begins_time");
     }
 
     void importSchedule(){
@@ -118,6 +138,10 @@ public class MainActivity extends BaseActivity {
                     SharedPreferences sharedPreferences=getSharedPreferences("user",MODE_PRIVATE);
                     LoginHelper.getSchedule(sharedPreferences.getString("account","null"),sharedPreferences.getString("password","null"));
                     IO.writeSchedule(LoginHelper.getSchedules());
+                    SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences1.edit();
+                    editor.putString("term_begins_time", LoginHelper.getTermBeginsTime());
+                    editor.commit();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -164,6 +188,9 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.mainMenuNextWeek:
+                if (targetWeek == weeksOfTerm) {
+                    break;
+                }
                 timetableView.changeWeekForce(++this.targetWeek);
                 break;
             case R.id.mainMenuPreviousWeek:
@@ -252,5 +279,20 @@ public class MainActivity extends BaseActivity {
                 }
             }
         }).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
+        termBeginsTime = sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        showWeekday = sharedPreferences.getBoolean("show_weekday", true);
+        classesOfDay = sharedPreferences.getInt("classes_of_day", 10);
+        weeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek));
+
+        targetWeek = currentWeek = DateUtils.getCurrentWeek(termBeginsTime);
+        timetableView.isShowWeekends(showWeekday);
+        timetableView.maxSlideItem(classesOfDay);
+        timetableView.updateView();
     }
 }

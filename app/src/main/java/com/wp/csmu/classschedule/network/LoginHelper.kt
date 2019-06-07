@@ -16,6 +16,11 @@ object LoginHelper {
     var termSelection = HashMap<String, String>()
     @JvmStatic
     var schedules = HashSet<Subjects>()
+
+    @JvmStatic
+    var termBeginsTime = ""
+
+
     private fun getCookie() {
         val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/"
         val request = Request.Builder().url(url).get().build()
@@ -23,10 +28,11 @@ object LoginHelper {
         cookie = response.header("Set-Cookie")!!
         //println(cookie)
     }
+
     @Throws(Exception::class)
 
     @JvmStatic
-    public fun getSchedule(account:String, password: String){
+    fun getSchedule(account: String, password: String) {
         if (cookie==""){
             getCookie()
         }
@@ -71,6 +77,8 @@ object LoginHelper {
         /********获取课程表***************/
         val scheduleDocument = document.select("table[id=kbtable]").first()
         getSchedule(scheduleDocument)
+        /********获取开学时间***************/
+        termBeginsTime = mGetTermBeginsTime()
     }
 
     private fun getSchedule(htmlTable: Element) {
@@ -164,5 +172,28 @@ object LoginHelper {
             }
         }
         return null
+    }
+
+    private fun getTermBeginsPage(): String {
+        val document = Jsoup.connect("http://jiaowu.csmu.edu.cn:8099/jsxsd/jxzl/jxzl_query").header("Cookie", cookie).get()
+        val table = document.select("table[id=kbtable] > tbody")[0]
+        return parseTermBeginsTime(table)
+    }
+
+    private fun mGetTermBeginsTime(): String = getTermBeginsPage()
+
+    private fun parseTermBeginsTime(element: Element): String {
+        val trs = element.select("tr")
+        for (i in 1 until trs.size) {
+            val tds = trs[i].select("td")
+            for (j in 0 until tds.size) {
+                if (tds[j].attr("title") === null || tds[j].attr("title").trim() == "") {
+
+                } else {
+                    return tds[j].attr("title").replace("年", "-").replace("月", "-")
+                }
+            }
+        }
+        return ""
     }
 }
