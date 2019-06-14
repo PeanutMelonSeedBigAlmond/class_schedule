@@ -4,32 +4,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
-
-import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.wp.csmu.classschedule.R;
-import com.wp.csmu.classschedule.io.IO;
-import com.wp.csmu.classschedule.network.LoginHelper;
-import com.wp.csmu.classschedule.utils.DateUtils;
-import com.wp.csmu.classschedule.view.scheduletable.Subjects;
-import com.wp.csmu.classschedule.view.utils.BindView;
-import com.zhuangfei.timetable.TimetableView;
-import com.zhuangfei.timetable.listener.OnItemClickAdapter;
-import com.zhuangfei.timetable.model.Schedule;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,63 +18,105 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager.widget.ViewPager;
+
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.wp.csmu.classschedule.R;
+import com.wp.csmu.classschedule.config.TimetableViewConfig;
+import com.wp.csmu.classschedule.fragment.ScheduleFragment;
+import com.wp.csmu.classschedule.io.IO;
+import com.wp.csmu.classschedule.network.LoginHelper;
+import com.wp.csmu.classschedule.utils.DateUtils;
+import com.wp.csmu.classschedule.view.adapter.ScheduleViewPagerAdapter;
+import com.wp.csmu.classschedule.view.scheduletable.AppSubjects;
+import com.wp.csmu.classschedule.view.utils.BindView;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends BaseActivity {
-    HashSet<Subjects> subjects;
     int currentWeek;
-    int targetWeek;
     @BindView(R.id.mainSwipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.mainCoordinatorLayout)
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.mainToolBar)
     Toolbar toolbar;
-    @BindView(R.id.mainTimeTableView)
-    TimetableView timetableView;
     @BindView(R.id.mainNavigationView)
     NavigationView navigationView;
     @BindView(R.id.mainDrawerLayout)
     DrawerLayout drawerLayout;
+    @BindView(R.id.mainViewPager)
+    ViewPager viewPager;
 
-    String termBeginsTime;
-    boolean showWeekday;
-    int classesOfDay;
-    int weeksOfTerm;
+    List<ScheduleFragment> fragments;
+    FragmentManager fragmentManager;
+    ScheduleViewPagerAdapter adapter;
+
+    int lastWeeksOfTerm;
+    long lastClickTime = -1500;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar(toolbar);
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastClickTime > 500) {
+                    lastClickTime = currentTime;
+                } else {
+                    viewPager.setCurrentItem(currentWeek - 1);
+                    lastClickTime = currentTime;
+                }
+            }
+        });
+
         SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
-        termBeginsTime = sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-        showWeekday = sharedPreferences.getBoolean("show_weekday", true);
-        classesOfDay = sharedPreferences.getInt("classes_of_day", 10);
-        weeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek));
 
-        targetWeek = currentWeek = DateUtils.getCurrentWeek(termBeginsTime);
-        timetableView.isShowWeekends(showWeekday);
-        timetableView.maxSlideItem(classesOfDay);
+        TimetableViewConfig.INSTANCE.setTermBeginsTime(sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
+        TimetableViewConfig.INSTANCE.setShowWeekday(sharedPreferences.getBoolean("show_weekday", true));
+        TimetableViewConfig.INSTANCE.setClassesOfDay(sharedPreferences.getInt("classes_of_day", 10));
+        TimetableViewConfig.INSTANCE.setWeeksOfTerm(lastWeeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek)));
+        currentWeek = DateUtils.getCurrentWeek(TimetableViewConfig.INSTANCE.getTermBeginsTime());
 
-        getSupportActionBar().setSubtitle("第"+currentWeek+"周");
-        if (checkSchedule()){
+        fragments = new ArrayList<>();
+        for (int i = 1; i <= TimetableViewConfig.INSTANCE.getWeeksOfTerm(); i++) {
+            fragments.add(ScheduleFragment.Companion.newInstance(i));
+        }
+        fragmentManager = getSupportFragmentManager();
+        adapter = new ScheduleViewPagerAdapter(fragmentManager, fragments);
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new MyOnPageChangeListener());
+        viewPager.setOffscreenPageLimit(2);
+
+        if (checkSchedule()) {
             readSchedule();
-        }else {
+        } else {
             importSchedule();
         }
+
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.mainDrawerHomePage:
-                        startActivity(new Intent(MainActivity.this,HomepageActivity.class));
+                        startActivity(new Intent(MainActivity.this, HomepageActivity.class));
                         break;
                     case R.id.mainDrawerScore:
-                        startActivity(new Intent(MainActivity.this,ScoreActivity.class));
+                        startActivity(new Intent(MainActivity.this, ScoreActivity.class));
                         break;
                     case R.id.mainDrawerRefresh:
                         refreshSchedule();
@@ -107,19 +129,7 @@ public class MainActivity extends BaseActivity {
                 return true;
             }
         });
-        timetableView.callback(new OnItemClickAdapter(){
-            @Override
-            public void onItemClick(View v, List<Schedule> scheduleList) {
-                for (Schedule schedule:scheduleList){
-                    if (schedule.getWeekList().contains(Integer.valueOf(toolbar.getSubtitle().toString().substring(1,toolbar.getSubtitle().toString().length()-1))))
-                    {
-                        Log.i("课程",schedule.getName()+"\t"+schedule.getTeacher());
-                        showScheduleInfo(schedule);
-                        break;
-                    }
-                }
-            }
-        });
+
     }
 
     boolean checkSchedule() {
@@ -129,14 +139,14 @@ public class MainActivity extends BaseActivity {
         return file.exists() && sharedPreferences.contains("term_begins_time");
     }
 
-    void importSchedule(){
+    void importSchedule() {
         swipeRefreshLayout.setRefreshing(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    SharedPreferences sharedPreferences=getSharedPreferences("user",MODE_PRIVATE);
-                    LoginHelper.getSchedule(sharedPreferences.getString("account","null"),sharedPreferences.getString("password","null"));
+                    SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+                    LoginHelper.getSchedule(sharedPreferences.getString("account", "null"), sharedPreferences.getString("password", "null"));
                     IO.writeSchedule(LoginHelper.getSchedules());
                     SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences1.edit();
@@ -147,17 +157,14 @@ public class MainActivity extends BaseActivity {
                         public void run() {
                             swipeRefreshLayout.setRefreshing(false);
                             readSchedule();
-                            timetableView.curWeek(currentWeek);
-                            timetableView.source(new ArrayList<>(subjects));
-                            timetableView.showView();
                         }
                     });
-                }catch (final Exception e){
+                } catch (final Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             swipeRefreshLayout.setRefreshing(true);
-                            Snackbar.make(coordinatorLayout,"导入失败\n"+e.toString(),Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(coordinatorLayout, "导入失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -165,12 +172,10 @@ public class MainActivity extends BaseActivity {
         }).start();
     }
 
-    void readSchedule(){
+    void readSchedule() {
         try {
-            subjects=IO.readSchedule();
-            timetableView.curWeek(currentWeek);
-            timetableView.source(new ArrayList<>(subjects));
-            timetableView.showView();
+            AppSubjects.Companion.setSubjects(IO.readSchedule());
+            viewPager.setCurrentItem(currentWeek - 1);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -180,65 +185,60 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu,menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.mainMenuNextWeek:
-                if (targetWeek == weeksOfTerm) {
-                    break;
-                }
-                timetableView.changeWeekForce(++this.targetWeek);
-                break;
-            case R.id.mainMenuPreviousWeek:
-                if (targetWeek == 1) {
-                    break;
-                }
-                timetableView.changeWeekForce(--this.targetWeek);
-                break;
-            case R.id.mainMenuGoToCurrent:
-                timetableView.changeWeekForce(this.targetWeek=currentWeek);
-                break;
+            case R.id.gotoWeek:
+                View view = LayoutInflater.from(this).inflate(R.layout.weeks_classes_selector, null);
+                final TextView t1, t2, t3;
+                final SeekBar sb;
+                t1 = view.findViewById(R.id.weeksClassesSelectorTextView1);
+                t2 = view.findViewById(R.id.weeksClassesSelectorTextView2);
+                t3 = view.findViewById(R.id.weeksClassesSelectorTextView3);
+                sb = view.findViewById(R.id.weeksClassesSelectorSeekBar);
+                sb.setProgress(viewPager.getCurrentItem());
+                sb.setMax(fragments.size() - 1);
+                t1.setText(sb.getProgress() + 1 + "");
+                t2.setText("1");
+                t3.setText(sb.getMax() + 1 + "");
+                sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        t1.setText(progress + 1 + "");
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+
+                    }
+                });
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("跳转").setView(view).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        viewPager.setCurrentItem(sb.getProgress());
+                    }
+                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).show();
         }
-        timetableView.showView();
-        timetableView.onDateBuildListener().onUpdateDate(currentWeek,targetWeek);
-        Log.i("MainActivity","菜单被选择");
-        getSupportActionBar().setSubtitle("第"+targetWeek+"周");
         return true;
     }
 
-    private void showScheduleInfo(Schedule schedule){
-        String name=schedule.getName();
-        String room=schedule.getRoom();
-        String teacher=schedule.getTeacher();
-        List<Integer>weekList=schedule.getWeekList();
-        StringBuilder stringBuilder=new StringBuilder();
-        for (int i=0;i<weekList.size();i++){
-            stringBuilder.append(weekList.get(i));
-            if (i!=weekList.size()-1){
-                stringBuilder.append(", ");
-            }else {
-                stringBuilder.append(" 周");
-            }
-        }
-        AlertDialog.Builder builder=new AlertDialog.Builder(this);
-        builder.setTitle(name);
-        View view= LayoutInflater.from(this).inflate(R.layout.schedule_info_dialog,null);
-        TextView t1=view.findViewById(R.id.scheduleInfoTextView1);
-        TextView t2=view.findViewById(R.id.scheduleInfoTextView2);
-        TextView t3=view.findViewById(R.id.scheduleInfoTextView3);
-        t1.setText(stringBuilder);
-        t2.setText(teacher);
-        t3.setText(room);
-        builder.setView(view);
-        builder.create().show();
-    }
-
-    private void refreshSchedule(){
-        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+    private void refreshSchedule() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("刷新课程表？（需要网络）").setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -252,30 +252,27 @@ public class MainActivity extends BaseActivity {
         }).show();
     }
 
-    private void reloadSchedule(){
-        SharedPreferences sharedPreferences=getSharedPreferences("user",MODE_PRIVATE);
-        final String account=sharedPreferences.getString("account","");
-        final String password=sharedPreferences.getString("password","");
+    private void reloadSchedule() {
+        SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+        final String account = sharedPreferences.getString("account", "");
+        final String password = sharedPreferences.getString("password", "");
         swipeRefreshLayout.setRefreshing(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    LoginHelper.getSchedule(account,password);
+                    LoginHelper.getSchedule(account, password);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             swipeRefreshLayout.setRefreshing(false);
                             readSchedule();
-                            timetableView.curWeek(currentWeek);
-                            timetableView.source(new ArrayList<>(subjects));
-                            timetableView.showView();
-                            Snackbar.make(coordinatorLayout,"刷新成功",Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(coordinatorLayout, "刷新成功", Snackbar.LENGTH_SHORT).show();
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     swipeRefreshLayout.setRefreshing(false);
-                    Snackbar.make(coordinatorLayout,"刷新失败\n"+e.toString(),Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(coordinatorLayout, "刷新失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
                 }
             }
         }).start();
@@ -285,14 +282,37 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
-        termBeginsTime = sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-        showWeekday = sharedPreferences.getBoolean("show_weekday", true);
-        classesOfDay = sharedPreferences.getInt("classes_of_day", 10);
-        weeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek));
 
-        targetWeek = currentWeek = DateUtils.getCurrentWeek(termBeginsTime);
-        timetableView.isShowWeekends(showWeekday);
-        timetableView.maxSlideItem(classesOfDay);
-        timetableView.updateView();
+        TimetableViewConfig.INSTANCE.setTermBeginsTime(sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
+        TimetableViewConfig.INSTANCE.setShowWeekday(sharedPreferences.getBoolean("show_weekday", true));
+        TimetableViewConfig.INSTANCE.setClassesOfDay(sharedPreferences.getInt("classes_of_day", 10));
+        TimetableViewConfig.INSTANCE.setWeeksOfTerm(sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek)));
+        currentWeek = DateUtils.getCurrentWeek(TimetableViewConfig.INSTANCE.getTermBeginsTime());
+        if (lastWeeksOfTerm != TimetableViewConfig.INSTANCE.getWeeksOfTerm()) {
+            fragments.clear();
+            for (int i = 1; i <= TimetableViewConfig.INSTANCE.getWeeksOfTerm(); i++) {
+                fragments.add(ScheduleFragment.Companion.newInstance(i));
+            }
+            adapter.fragmentChanged(fragments);
+        } else {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private class MyOnPageChangeListener implements ViewPager.OnPageChangeListener {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            getSupportActionBar().setSubtitle("第" + (position + 1) + "周");
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
     }
 }

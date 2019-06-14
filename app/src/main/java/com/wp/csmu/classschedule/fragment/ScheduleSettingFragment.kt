@@ -19,6 +19,7 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
     lateinit var weeksOfTerm: Preference
     lateinit var classesOfDay: Preference
     lateinit var termBeginTime: Preference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -48,6 +49,7 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
                 showBeginTimeSelect()
                 return true
             }
+
         }
         return false
     }
