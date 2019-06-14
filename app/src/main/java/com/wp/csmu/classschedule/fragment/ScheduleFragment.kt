@@ -45,7 +45,7 @@ class ScheduleFragment : Fragment() {
         timetableView = view.findViewById(R.id.scheduleFragmentTimeTableView)
         timetableView.source(AppSubjects.subjects.toMutableList())
         timetableView.isShowWeekends(TimetableViewConfig.isShowWeekday)
-        timetableView.changeWeekOnly(week)
+        timetableView.changeWeekForce(week)
         timetableView.showView()
         timetableView.onDateBuildListener().onUpdateDate(DateUtils.getCurrentWeek(TimetableViewConfig.termBeginsTime), week)
         timetableView.callback(object : OnItemClickAdapter() {
