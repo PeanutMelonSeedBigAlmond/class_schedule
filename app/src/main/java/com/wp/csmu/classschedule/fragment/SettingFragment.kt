@@ -1,5 +1,8 @@
 package com.wp.csmu.classschedule.fragment
 
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +13,8 @@ import android.widget.ListView
 import androidx.fragment.app.Fragment
 import com.tencent.bugly.beta.Beta
 import com.wp.csmu.classschedule.R
+import com.wp.csmu.classschedule.activity.BaseActivity
+import com.wp.csmu.classschedule.activity.LoginActivity
 
 class SettingFragment : Fragment() {
     lateinit var listView: ListView
@@ -37,7 +42,22 @@ class SettingFragment : Fragment() {
                 1 -> {
                     Beta.checkUpgrade()
                 }
+                2 -> {
+                    logout()
+                }
             }
         }
+    }
+
+    fun logout() {
+        val dialog = AlertDialog.Builder(context).setMessage("确定退出登录吗").setPositiveButton("确定") { dialog, which ->
+            val sharedPreferences = context!!.getSharedPreferences("user", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.clear()
+            editor.commit()
+            BaseActivity().finishAllActivity()
+            startActivity(Intent(activity, LoginActivity::class.java))
+        }.setNegativeButton("取消") { dialog, which -> }
+        dialog.show()
     }
 }

@@ -6,8 +6,8 @@
     "apkInfo": {
       "type": "MAIN",
       "splits": [],
-      "versionCode": 190615,
-      "versionName": "1.1.4",
+      "versionCode": 190622,
+      "versionName": "1.1.5",
       "enabled": true,
       "outputFile": "app-release.apk",
       "fullName": "release",

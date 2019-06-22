@@ -9,15 +9,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.io.IO;
-import com.wp.csmu.classschedule.network.LoginHelper;
+import com.wp.csmu.classschedule.network.NetworkHelper;
 import com.wp.csmu.classschedule.view.utils.BindView;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 public class LoginActivity extends BaseActivity {
     @BindView(R.id.loginTextInputLayout1)
@@ -51,11 +51,11 @@ public class LoginActivity extends BaseActivity {
                     editor.commit();
                     try {
                         //写入课程
-                        IO.writeSchedule(LoginHelper.getSchedules());
+                        IO.writeSchedule(NetworkHelper.getSchedules());
                         //写入开学时间
                         SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
                         SharedPreferences.Editor editor1 = sharedPreferences.edit();
-                        editor1.putString("term_begins_time", LoginHelper.getTermBeginsTime());
+                        editor1.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -92,7 +92,7 @@ public class LoginActivity extends BaseActivity {
                 @Override
                 public void run() {
                     try {
-                        LoginHelper.getSchedule(account, password);
+                        NetworkHelper.GetSchedule.getSchedule(account, password);
                         handler.sendEmptyMessage(0);
                     } catch (Exception e) {
                         Message message = new Message();

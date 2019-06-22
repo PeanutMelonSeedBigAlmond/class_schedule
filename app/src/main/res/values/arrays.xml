@@ -3,5 +3,6 @@
     <string-array name="fragmentSettingListViewArray">
         <item>课程表设置</item>
         <item>检查更新</item>
+        <item>退出登录</item>
     </string-array>
 </resources>

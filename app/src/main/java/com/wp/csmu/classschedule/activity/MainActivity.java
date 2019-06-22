@@ -28,7 +28,7 @@ import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.config.TimetableViewConfig;
 import com.wp.csmu.classschedule.fragment.ScheduleFragment;
 import com.wp.csmu.classschedule.io.IO;
-import com.wp.csmu.classschedule.network.LoginHelper;
+import com.wp.csmu.classschedule.network.NetworkHelper;
 import com.wp.csmu.classschedule.utils.DateUtils;
 import com.wp.csmu.classschedule.view.adapter.ScheduleViewPagerAdapter;
 import com.wp.csmu.classschedule.view.scheduletable.AppSubjects;
@@ -112,9 +112,6 @@ public class MainActivity extends BaseActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.mainDrawerHomePage:
-                        startActivity(new Intent(MainActivity.this, HomepageActivity.class));
-                        break;
                     case R.id.mainDrawerScore:
                         startActivity(new Intent(MainActivity.this, ScoreActivity.class));
                         break;
@@ -146,11 +143,11 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 try {
                     SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
-                    LoginHelper.getSchedule(sharedPreferences.getString("account", "null"), sharedPreferences.getString("password", "null"));
-                    IO.writeSchedule(LoginHelper.getSchedules());
+                    NetworkHelper.GetSchedule.getSchedule(sharedPreferences.getString("account", "null"), sharedPreferences.getString("password", "null"));
+                    IO.writeSchedule(NetworkHelper.getSchedules());
                     SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences1.edit();
-                    editor.putString("term_begins_time", LoginHelper.getTermBeginsTime());
+                    editor.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
                     editor.commit();
                     runOnUiThread(new Runnable() {
                         @Override
@@ -261,7 +258,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public void run() {
                 try {
-                    LoginHelper.getSchedule(account, password);
+                    NetworkHelper.GetSchedule.getSchedule(account, password);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

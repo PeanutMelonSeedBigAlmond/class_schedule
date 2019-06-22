@@ -44,10 +44,6 @@
             android:name=".activity.ScoreActivity"
             android:label="考试成绩"
             android:parentActivityName=".activity.MainActivity" />
-        <activity
-            android:name=".activity.HomepageActivity"
-            android:label="个人信息"
-            android:parentActivityName=".activity.MainActivity" />
         <activity android:name=".activity.MainActivity" />
         <activity
             android:name="com.tencent.bugly.beta.ui.BetaActivity"

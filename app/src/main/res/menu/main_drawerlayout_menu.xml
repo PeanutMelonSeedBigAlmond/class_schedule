@@ -7,11 +7,6 @@
         android:icon="@drawable/ic_schedule_black_24dp"
         android:title="课程" />
     <item
-        android:id="@+id/mainDrawerHomePage"
-        android:checkable="false"
-        android:icon="@drawable/ic_homepage_black_24dp"
-        android:title="个人信息" />
-    <item
         android:id="@+id/mainDrawerScore"
         android:checkable="false"
         android:icon="@drawable/ic_score_black_24dp"
