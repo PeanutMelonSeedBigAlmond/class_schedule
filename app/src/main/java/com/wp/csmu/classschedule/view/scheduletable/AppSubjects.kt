@@ -3,6 +3,12 @@ package com.wp.csmu.classschedule.view.scheduletable
 
 class AppSubjects {
     companion object {
-        lateinit var subjects: Set<Subjects>
+        var subjects = HashSet<Subjects>()
+            set(value) {
+                if (subjects.isNotEmpty()) {
+                    subjects.clear()
+                }
+                field = value
+            }
     }
 }

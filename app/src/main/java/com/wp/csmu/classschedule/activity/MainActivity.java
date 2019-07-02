@@ -3,7 +3,10 @@ package com.wp.csmu.classschedule.activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +39,7 @@ import com.wp.csmu.classschedule.view.utils.BindView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,6 +92,8 @@ public class MainActivity extends BaseActivity {
         TimetableViewConfig.INSTANCE.setClassesOfDay(sharedPreferences.getInt("classes_of_day", 10));
         TimetableViewConfig.INSTANCE.setWeeksOfTerm(lastWeeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek)));
         currentWeek = DateUtils.getCurrentWeek(TimetableViewConfig.INSTANCE.getTermBeginsTime());
+        currentWeek = currentWeek < 0 ? 1 : currentWeek;
+        getSupportActionBar().setSubtitle("第" + currentWeek + "周");
 
         fragments = new ArrayList<>();
         for (int i = 1; i <= TimetableViewConfig.INSTANCE.getWeeksOfTerm(); i++) {
@@ -97,12 +103,11 @@ public class MainActivity extends BaseActivity {
         adapter = new ScheduleViewPagerAdapter(fragmentManager, fragments);
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new MyOnPageChangeListener());
-        viewPager.setOffscreenPageLimit(2);
 
         if (checkSchedule()) {
             readSchedule();
         } else {
-            importSchedule();
+            reloadSchedule();
         }
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -121,6 +126,25 @@ public class MainActivity extends BaseActivity {
                     case R.id.mainDrawerSetting:
                         startActivity(new Intent(MainActivity.this, SettingActivity.class));
                         break;
+                    case R.id.mainDrawerAbout:
+                        try {
+                            InputStream inputStream = getAssets().open("about.html");
+                            String text = IO.readString(inputStream);
+                            View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.about_dialog_layout, null, false);
+                            TextView textView = view.findViewById(R.id.aboutDialogTextView);
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                //api version > 24 (android n)
+                                textView.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT));
+                            } else {
+                                textView.setText(Html.fromHtml(text));
+                            }
+                            textView.setMovementMethod(LinkMovementMethod.getInstance());
+                            builder.setTitle("关于").setView(view).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                 }
                 drawerLayout.closeDrawers();
                 return true;
@@ -136,42 +160,11 @@ public class MainActivity extends BaseActivity {
         return file.exists() && sharedPreferences.contains("term_begins_time");
     }
 
-    void importSchedule() {
-        swipeRefreshLayout.setRefreshing(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
-                    NetworkHelper.GetSchedule.getSchedule(sharedPreferences.getString("account", "null"), sharedPreferences.getString("password", "null"));
-                    IO.writeSchedule(NetworkHelper.getSchedules());
-                    SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences1.edit();
-                    editor.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
-                    editor.commit();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            swipeRefreshLayout.setRefreshing(false);
-                            readSchedule();
-                        }
-                    });
-                } catch (final Exception e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            swipeRefreshLayout.setRefreshing(true);
-                            Snackbar.make(coordinatorLayout, "导入失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            }
-        }).start();
-    }
-
     void readSchedule() {
         try {
             AppSubjects.Companion.setSubjects(IO.readSchedule());
+            currentWeek = DateUtils.getCurrentWeek(NetworkHelper.getTermBeginsTime());
+            currentWeek = currentWeek < 0 ? 1 : currentWeek;
             viewPager.setCurrentItem(currentWeek - 1);
         } catch (IOException e) {
             e.printStackTrace();
@@ -188,7 +181,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.gotoWeek:
                 View view = LayoutInflater.from(this).inflate(R.layout.weeks_classes_selector, null);
                 final TextView t1, t2, t3;
@@ -262,9 +255,21 @@ public class MainActivity extends BaseActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            swipeRefreshLayout.setRefreshing(false);
-                            readSchedule();
-                            Snackbar.make(coordinatorLayout, "刷新成功", Snackbar.LENGTH_SHORT).show();
+                            try {
+                                swipeRefreshLayout.setRefreshing(false);
+                                IO.writeSchedule(NetworkHelper.getSchedules());
+                                SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
+                                SharedPreferences.Editor editor1 = sharedPreferences1.edit();
+                                editor1.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
+                                editor1.commit();
+                                readSchedule();
+                                adapter.notifyDataSetChanged();
+                                Snackbar.make(coordinatorLayout, "刷新成功", Snackbar.LENGTH_SHORT).show();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                swipeRefreshLayout.setRefreshing(false);
+                                Snackbar.make(coordinatorLayout, "刷新失败", Snackbar.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 } catch (Exception e) {
@@ -279,7 +284,6 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
-
         TimetableViewConfig.INSTANCE.setTermBeginsTime(sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
         TimetableViewConfig.INSTANCE.setShowWeekday(sharedPreferences.getBoolean("show_weekday", true));
         TimetableViewConfig.INSTANCE.setClassesOfDay(sharedPreferences.getInt("classes_of_day", 10));

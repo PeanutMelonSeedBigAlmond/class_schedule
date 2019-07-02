@@ -54,8 +54,9 @@ public class LoginActivity extends BaseActivity {
                         IO.writeSchedule(NetworkHelper.getSchedules());
                         //写入开学时间
                         SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
-                        SharedPreferences.Editor editor1 = sharedPreferences.edit();
+                        SharedPreferences.Editor editor1 = sharedPreferences1.edit();
                         editor1.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
+                        editor1.commit();
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     } catch (Exception e) {
                         e.printStackTrace();
