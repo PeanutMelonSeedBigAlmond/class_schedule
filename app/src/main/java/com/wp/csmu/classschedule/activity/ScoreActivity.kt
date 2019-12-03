@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
+import com.wp.csmu.classschedule.network.NetworkException
 import com.wp.csmu.classschedule.network.NetworkHelper
 import com.wp.csmu.classschedule.view.adapter.ScoreRecyclerAdapter
 import com.wp.csmu.classschedule.view.bean.Score
@@ -61,7 +62,11 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
                 -1 -> {
                     swipeRefreshLayout!!.isRefreshing = false
                     val e = msg.obj as Exception
-                    Snackbar.make(coordinatorLayout!!, e.toString(), Snackbar.LENGTH_SHORT).show()
+                    if (e is NetworkException) {
+                        Snackbar.make(coordinatorLayout!!, "网络连接不可用", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        Snackbar.make(coordinatorLayout!!, e.toString(), Snackbar.LENGTH_SHORT).show()
+                    }
                 }
             }
             true

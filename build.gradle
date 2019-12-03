@@ -37,3 +37,12 @@ ext{
     minSdkVersion=21
     targetSdkVersion=28
 }
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.tencent.bugly:tinker-support:1.1.5"
+    }
+}

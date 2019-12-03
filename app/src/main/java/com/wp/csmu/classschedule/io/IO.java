@@ -16,6 +16,7 @@ import java.util.HashSet;
 
 public class IO {
     public static String scheduleFile = MyApplication.getContext().getExternalFilesDir("") + "/schedule.dat";
+    public static String backgroundImg = MyApplication.getContext().getExternalFilesDir("") + "/background.bg";
 
     public static HashSet<Subjects> readSchedule() throws IOException, ClassNotFoundException {
         ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(scheduleFile));

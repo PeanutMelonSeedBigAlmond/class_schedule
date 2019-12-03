@@ -1,11 +1,13 @@
 package com.wp.csmu.classschedule.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
@@ -16,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.io.IO;
+import com.wp.csmu.classschedule.network.NetworkException;
 import com.wp.csmu.classschedule.network.NetworkHelper;
 import com.wp.csmu.classschedule.view.utils.BindView;
 
@@ -40,8 +43,12 @@ public class LoginActivity extends BaseActivity {
                 case -1:
                     button.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
-                    textInputLayout2.setError("账号或密码错误");
-                    textInputLayout2.setErrorEnabled(true);
+                    if ((msg.obj instanceof NetworkException)) {
+                        Snackbar.make(coordinatorLayout, "网络连接不可用", Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        textInputLayout2.setError("账号或密码错误");
+                        textInputLayout2.setErrorEnabled(true);
+                    }
                     break;
                 case 0:
                     SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
@@ -103,6 +110,8 @@ public class LoginActivity extends BaseActivity {
                     }
                 }
             }).start();
+            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(textInputLayout1.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         }
     }
 }

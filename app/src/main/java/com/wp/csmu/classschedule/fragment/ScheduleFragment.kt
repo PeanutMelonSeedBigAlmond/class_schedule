@@ -43,12 +43,24 @@ class ScheduleFragment : Fragment() {
         val week = arguments!!.getInt("week")
         Log.i("Tag", week.toString())
         timetableView = view.findViewById(R.id.scheduleFragmentTimeTableView)
+        timetableView.alpha(0f, 0f, 1f)
         timetableView.source(AppSubjects.subjects.toMutableList())
+        timetableView.curWeek(DateUtils.getCurrentWeek(TimetableViewConfig.termBeginsTime))
         timetableView.isShowWeekends(TimetableViewConfig.isShowWeekday)
         timetableView.maxSlideItem(TimetableViewConfig.classesOfDay)
-        timetableView.changeWeekForce(week)
+        timetableView.changeWeek(week, true)
         timetableView.showView()
-        timetableView.onDateBuildListener().onUpdateDate(DateUtils.getCurrentWeek(TimetableViewConfig.termBeginsTime), week)
+        var tempWeek = 0
+        timetableView.onDateBuildListener().onUpdateDate(
+                if (DateUtils.getCurrentWeek(TimetableViewConfig.termBeginsTime).also {
+                            tempWeek = it
+                            /*Log.i("Schedule",it.toString())*/
+                        } < 0)
+                    tempWeek - 1
+                else
+                    tempWeek,
+                week
+        )
         timetableView.callback(object : OnItemClickAdapter() {
             override fun onItemClick(v: View?, scheduleList: List<Schedule>?) {
                 for (schedule in scheduleList!!) {

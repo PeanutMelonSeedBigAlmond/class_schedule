@@ -42,6 +42,7 @@ class SettingFragment : Fragment() {
                 1 -> {
                     Beta.checkUpgrade()
                 }
+
                 2 -> {
                     logout()
                 }

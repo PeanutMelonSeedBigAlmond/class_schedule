@@ -27,6 +27,7 @@ object NetworkHelper {
     object Login {
         @Throws(Exception::class)
         internal fun login(username: String, password: String) {
+            checkNetWorkAvailable()
             if (cookie == "") {
                 getCookie()
             }
@@ -44,11 +45,13 @@ object NetworkHelper {
         }
 
         private fun encryptPassword(username: String, password: String): String {
+            checkNetWorkAvailable()
             return String(Base64.encode(username.toByteArray(), Base64.DEFAULT)).plus("%%%")
                     .plus(String(Base64.encode(password.toByteArray(), Base64.DEFAULT)))
         }
 
         internal fun getCookie() {
+            checkNetWorkAvailable()
             val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/"
             val request = Request.Builder().url(url).get().build()
             val response = client.newCall(request).execute()
@@ -60,11 +63,13 @@ object NetworkHelper {
         @Throws(Exception::class)
         @JvmStatic
         fun getSchedule(account: String, password: String) {
+            checkNetWorkAvailable()
             NetworkHelper.Login.login(account, password)
             getSchedulePage()
         }
 
         private fun getSchedulePage() {
+            checkNetWorkAvailable()
             val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/xskb/xskb_list.do"
             //val formBody = FormBody.Builder().add("xnxq01id", "2018-2019-1").build()
             val request = Request.Builder().url(url).header("Cookie", cookie).get().build()
@@ -181,6 +186,7 @@ object NetworkHelper {
 
     object GetTermBeginsTime {
         private fun getTermBeginsPage(): String {
+            checkNetWorkAvailable()
             val document = Jsoup.connect("http://jiaowu.csmu.edu.cn:8099/jsxsd/jxzl/jxzl_query").header("Cookie", cookie).get()
             val table = document.select("table[id=kbtable] > tbody")[0]
             return parseTermBeginsTime(table)
@@ -208,6 +214,7 @@ object NetworkHelper {
         @Throws(Exception::class)
         @JvmStatic
         public fun getGrades(term: String): ArrayList<Score> {
+            checkNetWorkAvailable()
             val url = "http://jiaowu.csmu.edu.cn:8099/jsxsd/kscj/cjcx_list"
             val formBody = FormBody.Builder().add("kksj", term).add("kcxz", "").add("kcmc", "").add("xsfs", "all").build()
             val request = Request.Builder().url(url).addHeader("Cookie", cookie).post(formBody).build()
@@ -220,6 +227,7 @@ object NetworkHelper {
         @Throws(Exception::class)
         @JvmStatic
         public fun queryTerms(scoreActivity: ScoreActivity): Int {
+            checkNetWorkAvailable()
             val sharedPreferences = MyApplication.getContext().getSharedPreferences("user", Context.MODE_PRIVATE)
             val username = sharedPreferences.getString("account", "")
             val password = sharedPreferences.getString("password", "")
@@ -265,4 +273,17 @@ object NetworkHelper {
             return scores
         }
     }
+
+    @JvmStatic
+    @Throws(Exception::class)
+    public fun checkNetWorkAvailable() {
+        val process = Runtime.getRuntime().exec("/system/bin/ping -c 1 -w 1 223.5.5.5")
+        val code = process.waitFor()
+        if (code != 0) {
+            throw NetworkException()
+        }
+    }
 }
+
+//网络连接不可用
+class NetworkException() : java.lang.Exception()

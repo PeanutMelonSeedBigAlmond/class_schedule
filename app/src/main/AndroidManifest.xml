@@ -25,7 +25,20 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
-        <activity android:name=".activity.ScheduleSettingActivity"></activity>
+        <receiver android:name=".widget.ClassScheduleWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/class_schedule_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".activity.ImageProcessActivity"
+            android:label="@string/title_activity_image_process"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activity.SettingActivity"
             android:label="设置"

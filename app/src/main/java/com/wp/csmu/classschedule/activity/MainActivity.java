@@ -3,6 +3,9 @@ package com.wp.csmu.classschedule.activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
@@ -19,18 +22,21 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.config.TimetableViewConfig;
 import com.wp.csmu.classschedule.fragment.ScheduleFragment;
 import com.wp.csmu.classschedule.io.IO;
+import com.wp.csmu.classschedule.network.NetworkException;
 import com.wp.csmu.classschedule.network.NetworkHelper;
 import com.wp.csmu.classschedule.utils.DateUtils;
 import com.wp.csmu.classschedule.view.adapter.ScheduleViewPagerAdapter;
@@ -38,6 +44,7 @@ import com.wp.csmu.classschedule.view.scheduletable.AppSubjects;
 import com.wp.csmu.classschedule.view.utils.BindView;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -59,6 +66,10 @@ public class MainActivity extends BaseActivity {
     DrawerLayout drawerLayout;
     @BindView(R.id.mainViewPager)
     ViewPager viewPager;
+    @BindView(R.id.mainConstraintLayout)
+    ConstraintLayout constraintLayout;
+    @BindView(R.id.appBarLayout)
+    AppBarLayout appBarLayout;
 
     List<ScheduleFragment> fragments;
     FragmentManager fragmentManager;
@@ -66,6 +77,7 @@ public class MainActivity extends BaseActivity {
 
     int lastWeeksOfTerm;
     long lastClickTime = -1500;
+    boolean backgroundExists = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -85,6 +97,9 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        //更改背景
+        setBackground();
+
         SharedPreferences sharedPreferences = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
 
         TimetableViewConfig.INSTANCE.setTermBeginsTime(sharedPreferences.getString("term_begins_time", new SimpleDateFormat("yyyy-MM-dd").format(new Date())));
@@ -92,7 +107,7 @@ public class MainActivity extends BaseActivity {
         TimetableViewConfig.INSTANCE.setClassesOfDay(sharedPreferences.getInt("classes_of_day", 10));
         TimetableViewConfig.INSTANCE.setWeeksOfTerm(lastWeeksOfTerm = sharedPreferences.getInt("weeks_of_term", Math.max(20, currentWeek)));
         currentWeek = DateUtils.getCurrentWeek(TimetableViewConfig.INSTANCE.getTermBeginsTime());
-        currentWeek = currentWeek < 0 ? 1 : currentWeek;
+        currentWeek = currentWeek <= 0 ? 1 : currentWeek;
         getSupportActionBar().setSubtitle("第" + currentWeek + "周");
 
         fragments = new ArrayList<>();
@@ -104,11 +119,7 @@ public class MainActivity extends BaseActivity {
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new MyOnPageChangeListener());
 
-        if (checkSchedule()) {
-            readSchedule();
-        } else {
-            reloadSchedule();
-        }
+        reloadSchedule();
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
@@ -163,7 +174,7 @@ public class MainActivity extends BaseActivity {
     void readSchedule() {
         try {
             AppSubjects.Companion.setSubjects(IO.readSchedule());
-            currentWeek = DateUtils.getCurrentWeek(NetworkHelper.getTermBeginsTime());
+            currentWeek = DateUtils.getCurrentWeek(TimetableViewConfig.INSTANCE.getTermBeginsTime());
             currentWeek = currentWeek < 0 ? 1 : currentWeek;
             viewPager.setCurrentItem(currentWeek - 1);
         } catch (IOException e) {
@@ -272,6 +283,16 @@ public class MainActivity extends BaseActivity {
                             }
                         }
                     });
+                } catch (NetworkException e) {
+                    runOnUiThread(() -> {
+                        swipeRefreshLayout.setRefreshing(false);
+                        if (checkSchedule()) {
+                            Snackbar.make(coordinatorLayout, "网络连接不可用,已使用本地缓存", Snackbar.LENGTH_SHORT).show();
+                            readSchedule();
+                        } else {
+                            Snackbar.make(coordinatorLayout, "网络连接不可用", Snackbar.LENGTH_SHORT).show();
+                        }
+                    });
                 } catch (Exception e) {
                     swipeRefreshLayout.setRefreshing(false);
                     Snackbar.make(coordinatorLayout, "刷新失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
@@ -299,6 +320,31 @@ public class MainActivity extends BaseActivity {
             adapter.notifyDataSetChanged();
         }
     }
+
+    private void setBackground() {
+        File background = new File(IO.backgroundImg);
+        if (backgroundExists = background.exists()) {
+            try {
+                FileInputStream fis = new FileInputStream(background);
+                Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                constraintLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+                fis.close();
+            } catch (Exception e) {
+
+            }
+        }
+    }
+
+//    @Override
+//    public void setContentView(int layoutResID) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            View decorView = getWindow().getDecorView();
+//            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+//            getWindow().setStatusBarColor(Color.TRANSPARENT);
+//        }
+//        super.setContentView(layoutResID);
+//    }
 
     private class MyOnPageChangeListener implements ViewPager.OnPageChangeListener {
         @Override

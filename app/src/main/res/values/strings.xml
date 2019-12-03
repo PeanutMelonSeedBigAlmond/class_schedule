@@ -2,5 +2,9 @@
     <string name="app_name">课程表</string>
     <string name="navigation_drawer_open">开启</string>
     <string name="navigation_drawer_close">关闭</string>
+    <string name="title_activity_image_process">编辑图片</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="configure">Configure</string>
+    <string name="add_widget">Add widget</string>
 
 </resources>

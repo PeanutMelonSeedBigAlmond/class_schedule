@@ -1,6 +1,9 @@
 package com.wp.csmu.classschedule.fragment
 
 
+import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.DatePicker
@@ -11,14 +14,19 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.wp.csmu.classschedule.R
+import com.wp.csmu.classschedule.activity.SettingActivity
+import com.wp.csmu.classschedule.io.IO
+import com.wp.csmu.classschedule.utils.ViewUtils
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
-
+    val CROP_CODE = 1
     lateinit var weeksOfTerm: Preference
     lateinit var classesOfDay: Preference
     lateinit var termBeginTime: Preference
+    lateinit var setBackground: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,10 +37,12 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
         weeksOfTerm = findPreference("weeks_of_term")!!
         classesOfDay = findPreference("classes_of_day")!!
         termBeginTime = findPreference("term_begins_time")!!
+        setBackground = findPreference("set_background")!!
 
         weeksOfTerm.onPreferenceClickListener = this
         classesOfDay.onPreferenceClickListener = this
         termBeginTime.onPreferenceClickListener = this
+        setBackground.onPreferenceClickListener = this
     }
 
     override fun onPreferenceClick(preference: Preference?): Boolean {
@@ -49,9 +59,47 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
                 showBeginTimeSelect()
                 return true
             }
-
+            setBackground -> {
+                showDialog()
+                return true
+            }
         }
         return false
+    }
+
+    private fun showDialog() {
+        val file = File(IO.backgroundImg)
+        if (file.exists()) {
+            val dialog = AlertDialog.Builder(activity)
+            dialog.setMessage("选择")
+                    .setPositiveButton("选择新图片") { _, _ -> selectBackground() }
+                    .setNeutralButton("清除背景图片") { _, _ ->
+                        run {
+                            file.delete()
+                            (activity as SettingActivity).showTextWithSnackBar("设置成功，重启生效")
+                        }
+                    }
+                    .show()
+        } else {
+            selectBackground()
+        }
+    }
+
+    private fun selectBackground() {
+        //选择并裁剪图片
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        intent.putExtra("crop", "true")
+
+        //设置宽高比
+        val pixels = ViewUtils.getScreenPixels(activity!!)
+        intent.putExtra("aspectX", pixels[0])
+        intent.putExtra("aspectY", pixels[1])
+
+        intent.putExtra("output", Uri.fromFile(File(IO.backgroundImg)))
+        intent.putExtra("outputFormat", "JPEG")
+
+        activity!!.startActivityForResult(Intent.createChooser(intent, "Choose Image"), CROP_CODE)
     }
 
     private fun showWeeksSelect() {
