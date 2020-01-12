@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment
 import com.tencent.bugly.beta.Beta
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
-import com.wp.csmu.classschedule.activity.LoginActivity
+import com.wp.csmu.classschedule.activity.loginactivity.LoginActivity
 
 class SettingFragment : Fragment() {
     lateinit var listView: ListView

@@ -1,14 +1,18 @@
 package com.wp.csmu.classschedule.activity
 
 import android.app.AlertDialog
+import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -17,12 +21,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputLayout
 import com.wp.csmu.classschedule.R
-import com.wp.csmu.classschedule.network.NetworkException
-import com.wp.csmu.classschedule.network.NetworkHelper
+import com.wp.csmu.classschedule.io.IO
+import com.wp.csmu.classschedule.network.Config
+import com.wp.csmu.classschedule.network.DataClient
+import com.wp.csmu.classschedule.network.LoginClient
+import com.wp.csmu.classschedule.network.LoginClient.downloadVerifyCode
+import com.wp.csmu.classschedule.network.LoginClient.login
 import com.wp.csmu.classschedule.view.adapter.ScoreRecyclerAdapter
 import com.wp.csmu.classschedule.view.bean.Score
 import com.wp.csmu.classschedule.view.utils.BindView
+import java.io.IOException
 import java.util.*
 
 class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
@@ -62,10 +72,13 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
                 -1 -> {
                     swipeRefreshLayout!!.isRefreshing = false
                     val e = msg.obj as Exception
-                    if (e is NetworkException) {
+                    if (e is IOException) {
                         Snackbar.make(coordinatorLayout!!, "网络连接不可用", Snackbar.LENGTH_SHORT).show()
                     } else {
-                        Snackbar.make(coordinatorLayout!!, e.toString(), Snackbar.LENGTH_SHORT).show()
+                        when (e.message) {
+                            "need verify code" -> showVerifyCode()
+                            else -> Snackbar.make(coordinatorLayout!!, e.message.toString(), Snackbar.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -114,12 +127,12 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         dialog.show()
     }
 
-    private fun getScore() {
+    private fun getScore(verifyCode: String = "") {
         swipeRefreshLayout!!.isRefreshing = true
         Thread(Runnable {
             try {
-                clickedItem = NetworkHelper.GetGrades.queryTerms(this@ScoreActivity)
-                getScore1()
+                clickedItem = DataClient.queryTerms(this@ScoreActivity)
+                getScore1(verifyCode)
             } catch (e: Exception) {
                 e.printStackTrace()
                 val msg = Message()
@@ -153,18 +166,55 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         build.show()
     }
 
-    internal fun getScore1() {
+    internal fun getScore1(verifyCode: String = "") {
+        Log.i("TAG", verifyCode)
         swipeRefreshLayout!!.isRefreshing = true
         Thread(Runnable {
             try {
-                data = NetworkHelper.GetGrades.getGrades(termId[clickedItem])
-                handler.sendEmptyMessage(0)
+                if (Config.state == LoginClient.State.SUCCESS) {
+                    data = DataClient.getGrades(termId[clickedItem])
+                    handler.sendEmptyMessage(0)
+                } else {
+                    val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
+                    val account = sharedPreferences.getString("account", "")
+                    val password = sharedPreferences.getString("password", "")
+                    val state = login(account, password, verifyCode)
+                    when (state) {
+                        LoginClient.State.SUCCESS -> {
+                            clickedItem = DataClient.queryTerms(this@ScoreActivity)
+                            data = DataClient.getGrades(termId[clickedItem])
+                            handler.sendEmptyMessage(0)
+                        }
+                        LoginClient.State.NEED_VERIFY_CODE -> throw java.lang.Exception("need verify code")
+                        LoginClient.State.WRONG_PASSWORD -> throw java.lang.Exception("wrong password")
+                        else -> {
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 val msg = Message()
                 msg.what = -1
                 msg.obj = e
                 handler.sendMessage(msg)
+            }
+        }).start()
+    }
+
+    fun showVerifyCode() {
+        val view = LayoutInflater.from(this).inflate(R.layout.show_verify_code, null)
+        refreshVerifyCode(view.findViewById(R.id.verifyCodeImage))
+        view.findViewById<View>(R.id.refreshVerifyCode).setOnClickListener { refreshVerifyCode(view.findViewById(R.id.verifyCodeImage)) }
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this).setView(view).setPositiveButton("确定") { dialog, which -> getScore1(view.findViewById<TextInputLayout>(R.id.textInputLayout5).editText!!.text.toString().trim()) }
+        dialog.show()
+    }
+
+    private fun refreshVerifyCode(imageView: ImageView) {
+        Thread(Runnable {
+            downloadVerifyCode()
+            runOnUiThread {
+                val bitmap = BitmapFactory.decodeFile(IO.verifyCodeImg)
+                imageView.setImageBitmap(bitmap)
             }
         }).start()
     }

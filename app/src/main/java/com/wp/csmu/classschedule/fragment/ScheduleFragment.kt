@@ -1,6 +1,5 @@
 package com.wp.csmu.classschedule.fragment
 
-
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater

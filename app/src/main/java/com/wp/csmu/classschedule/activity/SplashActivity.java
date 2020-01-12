@@ -1,7 +1,5 @@
 package com.wp.csmu.classschedule.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +7,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.wp.csmu.classschedule.R;
+import com.wp.csmu.classschedule.activity.loginactivity.LoginActivity;
+import com.wp.csmu.classschedule.activity.mainactivity.MainActivity;
 
 public class SplashActivity extends AppCompatActivity {
     Handler handle=new Handler(new Handler.Callback() {
@@ -17,10 +19,10 @@ public class SplashActivity extends AppCompatActivity {
         public boolean handleMessage(Message msg) {
             switch(msg.what){
                 case 0:
-                    startActivity(new Intent(SplashActivity.this,MainActivity.class));
+                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
                     break;
                 case 1:
-                    startActivity(new Intent(SplashActivity.this,LoginActivity.class));
+                    startActivity(new Intent(SplashActivity.this, LoginActivity.class));
                     break;
             }
             finish();

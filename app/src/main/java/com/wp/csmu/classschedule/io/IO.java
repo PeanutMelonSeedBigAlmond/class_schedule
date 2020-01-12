@@ -4,7 +4,9 @@ import com.wp.csmu.classschedule.application.MyApplication;
 import com.wp.csmu.classschedule.view.scheduletable.Subjects;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,6 +19,7 @@ import java.util.HashSet;
 public class IO {
     public static String scheduleFile = MyApplication.getContext().getExternalFilesDir("") + "/schedule.dat";
     public static String backgroundImg = MyApplication.getContext().getExternalFilesDir("") + "/background.bg";
+    public static String verifyCodeImg = MyApplication.getContext().getExternalFilesDir("") + "/verifyCode";
 
     public static HashSet<Subjects> readSchedule() throws IOException, ClassNotFoundException {
         ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(scheduleFile));
@@ -50,5 +53,16 @@ public class IO {
             e.printStackTrace();
         }
         return sb.toString();
+    }
+
+    public static void writeVerifyCodeImage(InputStream inputStream) throws IOException {
+        FileOutputStream outputStream = new FileOutputStream(new File(verifyCodeImg));
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        while ((len = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, len);
+        }
+        outputStream.flush();
+        outputStream.close();
     }
 }

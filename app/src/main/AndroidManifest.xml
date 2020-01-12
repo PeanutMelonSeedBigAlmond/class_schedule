@@ -42,7 +42,7 @@
         <activity
             android:name=".activity.SettingActivity"
             android:label="设置"
-            android:parentActivityName=".activity.MainActivity" />
+            android:parentActivityName=".activity.mainactivity.MainActivity" />
         <activity android:name=".activity.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,13 +51,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".activity.loginactivity.LoginActivity"
             android:label="登录" />
         <activity
             android:name=".activity.ScoreActivity"
             android:label="考试成绩"
-            android:parentActivityName=".activity.MainActivity" />
-        <activity android:name=".activity.MainActivity" />
+            android:parentActivityName=".activity.mainactivity.MainActivity" />
+        <activity android:name=".activity.mainactivity.MainActivity" />
         <activity
             android:name="com.tencent.bugly.beta.ui.BetaActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|locale"

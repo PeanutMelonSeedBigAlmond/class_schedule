@@ -1,4 +1,4 @@
-package com.wp.csmu.classschedule.activity;
+package com.wp.csmu.classschedule.activity.mainactivity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -32,12 +33,17 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.wp.csmu.classschedule.R;
+import com.wp.csmu.classschedule.activity.BaseActivity;
+import com.wp.csmu.classschedule.activity.ScoreActivity;
+import com.wp.csmu.classschedule.activity.SettingActivity;
 import com.wp.csmu.classschedule.config.TimetableViewConfig;
 import com.wp.csmu.classschedule.fragment.ScheduleFragment;
 import com.wp.csmu.classschedule.io.IO;
-import com.wp.csmu.classschedule.network.NetworkException;
-import com.wp.csmu.classschedule.network.NetworkHelper;
+import com.wp.csmu.classschedule.network.Config;
+import com.wp.csmu.classschedule.network.DataClient;
+import com.wp.csmu.classschedule.network.LoginClient;
 import com.wp.csmu.classschedule.utils.DateUtils;
 import com.wp.csmu.classschedule.view.adapter.ScheduleViewPagerAdapter;
 import com.wp.csmu.classschedule.view.scheduletable.AppSubjects;
@@ -119,7 +125,8 @@ public class MainActivity extends BaseActivity {
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new MyOnPageChangeListener());
 
-        reloadSchedule();
+        readSchedule();
+//        reloadSchedule("");
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
@@ -243,7 +250,7 @@ public class MainActivity extends BaseActivity {
         builder.setMessage("刷新课程表？（需要网络）").setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                reloadSchedule();
+                reloadSchedule("");
             }
         }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
@@ -253,7 +260,7 @@ public class MainActivity extends BaseActivity {
         }).show();
     }
 
-    private void reloadSchedule() {
+    private void reloadSchedule(String verifyCode) {
         SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
         final String account = sharedPreferences.getString("account", "");
         final String password = sharedPreferences.getString("password", "");
@@ -262,16 +269,39 @@ public class MainActivity extends BaseActivity {
             @Override
             public void run() {
                 try {
-                    NetworkHelper.GetSchedule.getSchedule(account, password);
+                    if (Config.INSTANCE.getState() == LoginClient.State.SUCCESS) {
+                        DataClient.INSTANCE.getSchedule();
+                    } else {
+                        LoginClient.State state = LoginClient.INSTANCE.login(account, password, verifyCode);
+                        switch (state) {
+                            case SUCCESS:
+                                IO.writeSchedule(DataClient.INSTANCE.getSchedule());
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        readSchedule();
+                                        adapter.notifyDataSetChanged();
+                                    }
+                                });
+                                break;
+                            case NEED_VERIFY_CODE:
+                                throw new Exception("need verify code");
+                            case WRONG_PASSWORD:
+                                throw new Exception("wrong password");
+                            default:
+                                break;
+                        }
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 swipeRefreshLayout.setRefreshing(false);
-                                IO.writeSchedule(NetworkHelper.getSchedules());
+                                IO.writeSchedule(Config.getSchedules());
                                 SharedPreferences sharedPreferences1 = getSharedPreferences("com.wp.csmu.classschedule_preferences", MODE_PRIVATE);
                                 SharedPreferences.Editor editor1 = sharedPreferences1.edit();
-                                editor1.putString("term_begins_time", NetworkHelper.getTermBeginsTime());
+                                editor1.putString("term_begins_time", Config.getTermBeginsTime());
                                 editor1.commit();
                                 readSchedule();
                                 adapter.notifyDataSetChanged();
@@ -283,7 +313,7 @@ public class MainActivity extends BaseActivity {
                             }
                         }
                     });
-                } catch (NetworkException e) {
+                } catch (IOException e) {
                     runOnUiThread(() -> {
                         swipeRefreshLayout.setRefreshing(false);
                         if (checkSchedule()) {
@@ -294,8 +324,19 @@ public class MainActivity extends BaseActivity {
                         }
                     });
                 } catch (Exception e) {
-                    swipeRefreshLayout.setRefreshing(false);
-                    Snackbar.make(coordinatorLayout, "刷新失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
+                    runOnUiThread(() -> {
+                        swipeRefreshLayout.setRefreshing(false);
+                        switch (e.getMessage()) {
+                            case "wrong password":
+                                break;
+                            case "need verify code":
+                                showVerifyCode();
+                                break;
+                            default:
+                                break;
+                        }
+                        Snackbar.make(coordinatorLayout, "刷新失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
+                    });
                 }
             }
         }).start();
@@ -335,17 +376,39 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-//    @Override
-//    public void setContentView(int layoutResID) {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            View decorView = getWindow().getDecorView();
-//            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-//            getWindow().setStatusBarColor(Color.TRANSPARENT);
-//        }
-//        super.setContentView(layoutResID);
-//    }
+    private void refreshVerifyCode(ImageView imageView) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LoginClient.INSTANCE.downloadVerifyCode();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Bitmap bitmap = BitmapFactory.decodeFile(IO.verifyCodeImg);
+                        imageView.setImageBitmap(bitmap);
+                    }
+                });
+            }
+        }).start();
+    }
 
+    private void showVerifyCode() {
+        View view = LayoutInflater.from(this).inflate(R.layout.show_verify_code, null);
+        refreshVerifyCode(view.findViewById(R.id.verifyCodeImage));
+        (view.findViewById(R.id.refreshVerifyCode)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                refreshVerifyCode(view.findViewById(R.id.verifyCodeImage));
+            }
+        });
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this).setView(view).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                reloadSchedule(((TextInputLayout) view.findViewById(R.id.textInputLayout5)).getEditText().getText().toString().trim());
+            }
+        });
+        dialog.show();
+    }
     private class MyOnPageChangeListener implements ViewPager.OnPageChangeListener {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {

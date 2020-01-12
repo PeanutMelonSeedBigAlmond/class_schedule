@@ -1,1 +1,5 @@
 /build
+build.gradle
+proguard-rules.pro
+./debug
+./release
