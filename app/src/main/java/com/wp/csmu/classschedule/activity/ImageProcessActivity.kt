@@ -120,13 +120,20 @@ class ImageProcessActivity : BaseActivity() {
         view1.setBackgroundColor(Color.argb(255, 255, 255, 255))
         imageViewMask.setBackgroundColor(Color.argb(255, 0, 0, 0))
         timetableView.source(AppSubjects.subjects.toList())
+        timetableView.showView()
         imageViewMask.background.mutate().alpha = 0
         thread {
             val image = readImage()
             runOnUiThread {
                 imageViewRaw.background = BitmapDrawable(resources, image)
             }
-            val blur = image.copy(image.config, true).setFuzzy(25).setFuzzy(25).setFuzzy(25).setFuzzy(25)
+            val blur = image.copy(image.config, true)
+                    .setFuzzy(25)
+                    .setFuzzy(25)
+                    .setFuzzy(25)
+                    .setFuzzy(25)
+                    .setFuzzy(25)
+                    .setFuzzy(25)
             runOnUiThread {
                 imageViewBulr.background = BitmapDrawable(resources, blur)
             }
