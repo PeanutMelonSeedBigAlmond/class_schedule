@@ -27,7 +27,7 @@ object LoginClient {
         val encoded = encode(userName, password)
         val response = client.login(Config.cookie!!, encoded).execute().body()
         val document = Jsoup.parse(response.string())
-        if (document.title() == "学术个人中心") {
+        if (document.title() == "学生个人中心") {
             Config.state = State.SUCCESS
             return State.SUCCESS
         } else {
@@ -287,7 +287,7 @@ object Config {
             }
             return field
         }
-    internal const val baseUrl = "http://jiaowu.csmu.edu.cn:8099/jsxsd/"
+    internal const val baseUrl = "http://oa.csmu.edu.cn:8099/jsxsd/"
 
     var state = LoginClient.State.NOT_LOGIN
 }

@@ -3,7 +3,6 @@ package com.wp.csmu.classschedule.fragment
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.DatePicker
@@ -16,13 +15,14 @@ import androidx.preference.PreferenceManager
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.SettingActivity
 import com.wp.csmu.classschedule.io.IO
-import com.wp.csmu.classschedule.utils.ViewUtils
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
     val CROP_CODE = 1
+    val SELECT_CODE = 3
+    val SUCCESS_CODE = 2
     lateinit var weeksOfTerm: Preference
     lateinit var classesOfDay: Preference
     lateinit var termBeginTime: Preference
@@ -87,19 +87,10 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
 
     private fun selectBackground() {
         //选择并裁剪图片
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
+//        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
-        intent.putExtra("crop", "true")
-
-        //设置宽高比
-        val pixels = ViewUtils.getScreenPixels(activity!!)
-        intent.putExtra("aspectX", pixels[0])
-        intent.putExtra("aspectY", pixels[1])
-
-        intent.putExtra("output", Uri.fromFile(File(IO.backgroundImg)))
-        intent.putExtra("outputFormat", "JPEG")
-
-        activity!!.startActivityForResult(Intent.createChooser(intent, "Choose Image"), CROP_CODE)
+        activity!!.startActivityForResult(intent, SELECT_CODE)
     }
 
     private fun showWeeksSelect() {
