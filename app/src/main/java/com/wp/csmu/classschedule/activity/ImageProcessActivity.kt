@@ -120,6 +120,7 @@ class ImageProcessActivity : BaseActivity() {
         view1.setBackgroundColor(Color.argb(255, 255, 255, 255))
         imageViewMask.setBackgroundColor(Color.argb(255, 0, 0, 0))
         timetableView.source(AppSubjects.subjects.toList())
+        timetableView.alpha(0f, 0f, 1f)
         timetableView.showView()
         imageViewMask.background.mutate().alpha = 0
         thread {
