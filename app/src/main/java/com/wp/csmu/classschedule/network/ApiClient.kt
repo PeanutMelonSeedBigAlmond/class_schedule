@@ -103,7 +103,8 @@ object DataClient {
         val scheduleDocument = document.select("table[id=kbtable]").first()
         getSchedule(scheduleDocument)
         /********获取开学时间***************/
-        Config.termBeginsTime = getTermBeginsTime()
+        val termBeginsTime = getTermBeginsTime()
+        Config.termBeginsTime = termBeginsTime;
     }
 
     fun getSchedule(htmlTable: Element) {
@@ -200,10 +201,16 @@ object DataClient {
     }
 
     fun mGetTermBeginsTime(): Document {
-        val response = client.getTermBeginsTime(Config.cookie!!).execute().body()
-        val content = response.string()
-        val document = Jsoup.parse(content)
-        return document
+        // 先访问一遍，拿到学期列表
+        val response = client.getTermBeginsTime(Config.cookie!!).execute().body().string()
+        val document = Jsoup.parse(response)
+        val options = document.getElementById("xnxq01id").select("option").map {
+            it.text()
+        }
+        val termId = options[0]
+        val response2 = client.getTermBeginsTime(Config.cookie!!, termId = termId).execute().body().string()
+        val document2 = Jsoup.parse(response2)
+        return document2
     }
 
     private fun parseTermBeginsTime(element: Element): String {
@@ -221,7 +228,7 @@ object DataClient {
         return ""
     }
 
-    public fun getTermBeginsTime() = parseTermBeginsTime(mGetTermBeginsTime().selectFirst("table[id=kbtable] > tbody"))
+    private fun getTermBeginsTime() = parseTermBeginsTime(mGetTermBeginsTime().selectFirst("table[id=kbtable] > tbody"))
 
     private fun parseGrades(document: Document): ArrayList<Score> {
         val table = document.select("table[id=dataList] > tbody")
@@ -274,6 +281,7 @@ object DataClient {
 
 object Config {
     var termSelection = HashMap<String, String>()
+
     @JvmStatic
     var schedules = HashSet<Subjects>()
 

@@ -276,7 +276,6 @@ public class MainActivity extends BaseActivity {
                         switch (state) {
                             case SUCCESS:
                                 IO.writeSchedule(DataClient.INSTANCE.getSchedule());
-
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -335,6 +334,7 @@ public class MainActivity extends BaseActivity {
                             default:
                                 break;
                         }
+                        e.printStackTrace();
                         Snackbar.make(coordinatorLayout, "刷新失败\n" + e.toString(), Snackbar.LENGTH_SHORT).show();
                     });
                 }

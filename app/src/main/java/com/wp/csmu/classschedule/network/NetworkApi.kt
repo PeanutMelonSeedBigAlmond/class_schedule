@@ -35,7 +35,11 @@ internal interface DataApi {
     ): Call<ResponseBody>
 
     @GET("jxzl/jxzl_query")
-    fun getTermBeginsTime(@Header("cookie") cookie: String): Call<ResponseBody>
+    fun getTermBeginsTime(
+            @Header("cookie") cookie: String,
+            @Header("referer") referer: String = Config.baseUrl + "jxzl/jxzl_query",
+            @Query("xnxq01id") termId: String = ""
+    ): Call<ResponseBody>
 
     @GET("kscj/cjcx_query")
     fun queryTerms(@Header("cookie") cookie: String): Call<ResponseBody>
