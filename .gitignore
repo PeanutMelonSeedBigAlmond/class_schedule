@@ -9,3 +9,4 @@
 app/build/
 app/debug/
 app/release/
+app/proguard-dict.txt
