@@ -20,7 +20,11 @@ class ScoreRecyclerAdapter(private var data: List<Score>?, private val listener:
         holder.subjectName.text = data!![position].name
         holder.score.text = data!![position].score
         try {
-            if (data!![position].score.toDouble() < 60.0) holder.score.setTextColor(Color.RED)
+            android.R.attr.textViewStyle
+            if (data!![position].score.toDouble() < 60.0)
+                holder.score.setTextColor(Color.RED)
+            else
+                holder.score.setTextColor((0x8f_00_00_00).toInt())
         } catch (e: Exception) {
         }
         holder.itemView.setOnClickListener { v -> listener.onClick(v, holder.adapterPosition) }
