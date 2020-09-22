@@ -26,7 +26,7 @@ object LoginClient {
     private fun mLogin(userName: String, password: String): State {
         val encoded = encode(userName, password)
         val response = client.login(Config.cookie!!, encoded).execute().body()
-        val document = Jsoup.parse(response.string())
+        val document = Jsoup.parse(response!!.string())
         if (document.title() == "学生个人中心") {
             Config.state = State.SUCCESS
             return State.SUCCESS
@@ -43,7 +43,7 @@ object LoginClient {
     private fun mLoginWithVerifyCode(userName: String, password: String, verifyCode: String): State {
         val encoded = encode(userName, password)
         val response = client.loginWithVerifyCode(Config.cookie!!, encoded, verifyCode).execute().body()
-        val document = Jsoup.parse(response.string())
+        val document = Jsoup.parse(response!!.string())
         return if (document.title() == "学生个人中心") {
             State.SUCCESS
         } else {
@@ -53,7 +53,7 @@ object LoginClient {
 
     fun downloadVerifyCode() {
         val response = client.getVerifyCode(Config.cookie!!).execute().body()
-        val inputStream = response.byteStream()
+        val inputStream = response!!.byteStream()
         IO.writeVerifyCodeImage(inputStream)
     }
 
@@ -86,7 +86,7 @@ object DataClient {
 
     private fun mGetSchedule(): Document {
         val response = client.getSchedule(Config.cookie!!).execute().body()
-        val content = response.string()
+        val content = response!!.string()
         val document = Jsoup.parse(content)
         return document
     }
@@ -202,13 +202,13 @@ object DataClient {
 
     fun mGetTermBeginsTime(): Document {
         // 先访问一遍，拿到学期列表
-        val response = client.getTermBeginsTime(Config.cookie!!).execute().body().string()
+        val response = client.getTermBeginsTime(Config.cookie!!).execute().body()!!.string()
         val document = Jsoup.parse(response)
         val options = document.getElementById("xnxq01id").select("option").map {
             it.text()
         }
         val termId = options[0]
-        val response2 = client.getTermBeginsTime(Config.cookie!!, termId = termId).execute().body().string()
+        val response2 = client.getTermBeginsTime(Config.cookie!!, termId = termId).execute().body()!!.string()
         val document2 = Jsoup.parse(response2)
         return document2
     }
@@ -257,7 +257,7 @@ object DataClient {
 
     public fun queryTerms(scoreActivity: ScoreActivity): Int {
         val response = client.queryTerms(Config.cookie!!).execute().body()
-        val content = response.string()
+        val content = response!!.string()
         val document = Jsoup.parse(content)
         val termDocument = document.select("select[id=kksj]").select("option")
         var selected = 0
@@ -273,7 +273,7 @@ object DataClient {
 
     public fun getGrades(term: String): ArrayList<Score> {
         val response = client.getGrades(Config.cookie!!, term).execute().body()
-        val content = response.string()
+        val content = response!!.string()
         val document = Jsoup.parse(content)
         return parseGrades(document)
     }

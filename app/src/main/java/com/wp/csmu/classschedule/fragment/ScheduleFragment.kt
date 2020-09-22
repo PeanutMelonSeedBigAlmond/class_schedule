@@ -39,7 +39,7 @@ class ScheduleFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val week = arguments!!.getInt("week")
+        val week = requireArguments().getInt("week")
         Log.i("Tag", week.toString())
         timetableView = view.findViewById(R.id.scheduleFragmentTimeTableView)
         timetableView.alpha(0f, 0f, 1f)

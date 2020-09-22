@@ -178,7 +178,7 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
                     val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
                     val account = sharedPreferences.getString("account", "")
                     val password = sharedPreferences.getString("password", "")
-                    val state = login(account, password, verifyCode)
+                    val state = login(account!!, password!!, verifyCode)
                     when (state) {
                         LoginClient.State.SUCCESS -> {
                             clickedItem = DataClient.queryTerms(this@ScoreActivity)
