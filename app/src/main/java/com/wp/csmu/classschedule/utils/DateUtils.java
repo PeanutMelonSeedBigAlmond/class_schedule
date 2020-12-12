@@ -45,4 +45,10 @@ public class DateUtils {
         calendar2.set(Calendar.SECOND, 0);
         return (int) ((calendar2.getTime().getTime() - calendar1.getTime().getTime()) / MILLISECOND_OF_DAY);
     }
+
+    public static String getCurrentDate(){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date=new Date();
+        return simpleDateFormat.format(date);
+    }
 }

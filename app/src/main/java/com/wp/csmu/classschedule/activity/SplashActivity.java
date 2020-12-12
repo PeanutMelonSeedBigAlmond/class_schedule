@@ -6,17 +6,23 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.KeyEvent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.activity.loginactivity.LoginActivity;
 import com.wp.csmu.classschedule.activity.mainactivity.MainActivity;
+import com.wp.csmu.classschedule.data.sharedpreferences.User;
+
+import net.nashlegend.anypref.AnyPref;
+
+import org.jetbrains.annotations.NotNull;
 
 public class SplashActivity extends AppCompatActivity {
     Handler handle=new Handler(new Handler.Callback() {
         @Override
-        public boolean handleMessage(Message msg) {
+        public boolean handleMessage(@NotNull Message msg) {
             switch(msg.what){
                 case 0:
                     startActivity(new Intent(SplashActivity.this, MainActivity.class));
@@ -40,10 +46,16 @@ public class SplashActivity extends AppCompatActivity {
         handle.sendEmptyMessageDelayed(flag,300);
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_BACK){
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     private boolean checkAccount(){
-        SharedPreferences sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE);
-        final String account = sharedPreferences.getString("account", null);
-        final String password = sharedPreferences.getString("password", null);
-        return !(account == null || password == null);
+        User user= AnyPref.get(User.class);
+        return !("".equals(user.getAccount()) || "".equals(user.getPassword()));
     }
 }

@@ -16,7 +16,7 @@ import com.zhuangfei.timetable.TimetableView
 import com.zhuangfei.timetable.listener.OnItemClickAdapter
 import com.zhuangfei.timetable.model.Schedule
 
-class ScheduleFragment : Fragment() {
+class ScheduleFragment private constructor(): Fragment() {
     companion object {
         fun newInstance(index: Int): ScheduleFragment {
             val fragment = ScheduleFragment()
@@ -87,9 +87,9 @@ class ScheduleFragment : Fragment() {
                 stringBuilder.append(" 周")
             }
         }
-        val builder = AlertDialog.Builder(context!!)
+        val builder = AlertDialog.Builder(requireContext())
         builder.setTitle(name)
-        val view = LayoutInflater.from(context!!).inflate(R.layout.schedule_info_dialog, null)
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.schedule_info_dialog, null)
         val t1 = view!!.findViewById<TextView>(R.id.scheduleInfoTextView1)
         val t2 = view.findViewById<TextView>(R.id.scheduleInfoTextView2)
         val t3 = view.findViewById<TextView>(R.id.scheduleInfoTextView3)

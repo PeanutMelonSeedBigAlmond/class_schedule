@@ -1,18 +1,12 @@
 package com.wp.csmu.classschedule.activity
 
 import android.app.AlertDialog
-import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -21,69 +15,41 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputLayout
 import com.wp.csmu.classschedule.R
-import com.wp.csmu.classschedule.io.IO
-import com.wp.csmu.classschedule.network.Config
-import com.wp.csmu.classschedule.network.DataClient
-import com.wp.csmu.classschedule.network.LoginClient
-import com.wp.csmu.classschedule.network.LoginClient.downloadVerifyCode
-import com.wp.csmu.classschedule.network.LoginClient.login
+import com.wp.csmu.classschedule.network.service.ServiceClient
 import com.wp.csmu.classschedule.view.adapter.ScoreRecyclerAdapter
 import com.wp.csmu.classschedule.view.bean.Score
 import com.wp.csmu.classschedule.view.utils.BindView
-import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     @BindView(R.id.scoreRecyclerView)
     internal var recyclerView: RecyclerView? = null
+
     @BindView(R.id.scoreToolbar)
     internal var toolbar: Toolbar? = null
+
     @BindView(R.id.scoreCoordinatorLayout)
     internal var coordinatorLayout: CoordinatorLayout? = null
+
     @BindView(R.id.scoreSwipeRefreshLayout)
     internal var swipeRefreshLayout: SwipeRefreshLayout? = null
-    private lateinit var handler: Handler
     lateinit var adapter: ScoreRecyclerAdapter
     lateinit var data: ArrayList<Score>
+    private var termName = ArrayList<String>()
+    private var termId = ArrayList<String>()
 
-    internal var termName = ArrayList<String>()
-    internal var termId = ArrayList<String>()
-
-    internal var clickedItem: Int = 0
+    private var clickedItem: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_score)
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        handler = Handler(Handler.Callback { msg ->
-            when (msg.what) {
-                0 -> {
-                    swipeRefreshLayout!!.isRefreshing = false
-                    adapter.updateData(data)
-                    recyclerView!!.scrollToPosition(0)
-                    supportActionBar!!.subtitle = termName[clickedItem]
-                    if (data.size == 0) {
-                        Snackbar.make(coordinatorLayout!!, "暂无信息", Snackbar.LENGTH_SHORT).show()
-                    }
-                }
-                -1 -> {
-                    swipeRefreshLayout!!.isRefreshing = false
-                    val e = msg.obj as Exception
-                    if (e is IOException) {
-                        Snackbar.make(coordinatorLayout!!, "网络连接不可用", Snackbar.LENGTH_SHORT).show()
-                    } else {
-                        when (e.message) {
-                            "need verify code" -> showVerifyCode()
-                            else -> Snackbar.make(coordinatorLayout!!, e.message.toString(), Snackbar.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
-            true
-        })
 
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorPrimary, R.color.colorAccent, R.color.colorPrimaryDark)
         //设置布局管理器
@@ -93,7 +59,7 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         //初始化适配器
         adapter = ScoreRecyclerAdapter(ArrayList(), this)
         recyclerView!!.adapter = adapter
-        swipeRefreshLayout!!.setOnRefreshListener { getScore1() }
+        swipeRefreshLayout!!.setOnRefreshListener { getScore1(termId[clickedItem]) }
         getScore()
     }
 
@@ -127,20 +93,22 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         dialog.show()
     }
 
-    private fun getScore(verifyCode: String = "") {
-        swipeRefreshLayout!!.isRefreshing = true
-        Thread(Runnable {
+    private fun getScore() {
+        GlobalScope.launch(Dispatchers.Main) {
             try {
-                clickedItem = DataClient.queryTerms(this@ScoreActivity)
-                getScore1(verifyCode)
+                swipeRefreshLayout!!.isRefreshing = true
+                val terms = withContext(Dispatchers.IO) { ServiceClient.getTermId() }
+                termId = terms.keys.map { it.first }.toMutableList().also { it.add(0, "") } as ArrayList<String>
+                termName = terms.keys.map { it.second }.toMutableList().also { it.add(0, "全部学期") } as ArrayList<String>
+                clickedItem = terms.findValue(true) + 1
+                withContext(Dispatchers.IO) { getScore1("") }
+                onOperationSucceed()
             } catch (e: Exception) {
                 e.printStackTrace()
-                val msg = Message()
-                msg.what = -1
-                msg.obj = e
-                handler.sendMessage(msg)
+                onOperationFailed(e)
             }
-        }).start()
+
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -160,62 +128,49 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     internal fun selectTerm() {
         val build = AlertDialog.Builder(this).setTitle("选择学期").setSingleChoiceItems(termName.toTypedArray(), clickedItem) { dialog, which ->
             clickedItem = which
-            getScore1()
+            getScore()
             dialog.dismiss()
         }.setNegativeButton("取消") { dialog, which -> }
         build.show()
     }
 
-    internal fun getScore1(verifyCode: String = "") {
-        Log.i("TAG", verifyCode)
-        swipeRefreshLayout!!.isRefreshing = true
-        Thread(Runnable {
+    fun getScore1(termId: String) {
+        GlobalScope.launch(Dispatchers.Main) {
             try {
-                if (Config.state == LoginClient.State.SUCCESS) {
-                    data = DataClient.getGrades(termId[clickedItem])
-                    handler.sendEmptyMessage(0)
-                } else {
-                    val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
-                    val account = sharedPreferences.getString("account", "")
-                    val password = sharedPreferences.getString("password", "")
-                    val state = login(account!!, password!!, verifyCode)
-                    when (state) {
-                        LoginClient.State.SUCCESS -> {
-                            clickedItem = DataClient.queryTerms(this@ScoreActivity)
-                            data = DataClient.getGrades(termId[clickedItem])
-                            handler.sendEmptyMessage(0)
-                        }
-                        LoginClient.State.NEED_VERIFY_CODE -> throw java.lang.Exception("need verify code")
-                        LoginClient.State.WRONG_PASSWORD -> throw java.lang.Exception("wrong password")
-                        else -> {
-                        }
-                    }
-                }
+                swipeRefreshLayout!!.isRefreshing = true
+                data = withContext(Dispatchers.IO) { ServiceClient.queryGrades(termId) }
+                onOperationSucceed()
             } catch (e: Exception) {
                 e.printStackTrace()
-                val msg = Message()
-                msg.what = -1
-                msg.obj = e
-                handler.sendMessage(msg)
+                onOperationFailed(e)
             }
-        }).start()
+        }
     }
 
-    fun showVerifyCode() {
-        val view = LayoutInflater.from(this).inflate(R.layout.show_verify_code, null)
-        refreshVerifyCode(view.findViewById(R.id.verifyCodeImage))
-        view.findViewById<View>(R.id.refreshVerifyCode).setOnClickListener { refreshVerifyCode(view.findViewById(R.id.verifyCodeImage)) }
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this).setView(view).setPositiveButton("确定") { dialog, which -> getScore1(view.findViewById<TextInputLayout>(R.id.textInputLayout5).editText!!.text.toString().trim()) }
-        dialog.show()
+    private fun onOperationSucceed() {
+        swipeRefreshLayout!!.isRefreshing = false
+        adapter.updateData(data)
+        recyclerView!!.scrollToPosition(0)
+        supportActionBar!!.subtitle = termName[clickedItem]
+        if (data.size == 0) {
+            Snackbar.make(coordinatorLayout!!, "暂无信息", Snackbar.LENGTH_SHORT).show()
+        }
     }
 
-    private fun refreshVerifyCode(imageView: ImageView) {
-        Thread(Runnable {
-            downloadVerifyCode()
-            runOnUiThread {
-                val bitmap = BitmapFactory.decodeFile(IO.verifyCodeImg)
-                imageView.setImageBitmap(bitmap)
+    private fun onOperationFailed(reason: Exception) {
+        swipeRefreshLayout!!.isRefreshing = false
+        Snackbar.make(coordinatorLayout!!, reason.toString(), Snackbar.LENGTH_SHORT).show()
+    }
+
+    // 寻找map中第一次出现value的index
+    private fun <K, V> Map<K, V>.findValue(value: V): Int {
+        var index = 0
+        this.entries.forEachIndexed { i, entry ->
+            if (entry.value == value) {
+                index = i
+                return@forEachIndexed
             }
-        }).start()
+        }
+        return index
     }
 }

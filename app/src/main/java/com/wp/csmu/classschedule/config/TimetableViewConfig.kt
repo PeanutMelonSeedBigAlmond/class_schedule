@@ -5,5 +5,4 @@ object TimetableViewConfig {
     var weeksOfTerm: Int = 0
     var classesOfDay: Int = 0
     var termBeginsTime: String? = null
-
 }
