@@ -69,16 +69,19 @@ object ServiceClient {
         val document = Jsoup.parse(html)
         val scheduleTableHtml = document.select("#kbtable > tbody > tr")
         scheduleTableHtml.drop(1)
-                .forEachIndexed { dayIndex, rowHtml ->
-                    rowHtml.select("tr").drop(1).forEach { cellHtml ->
-                        val text = cellHtml.html().replace(Regex("-{3,}"), "</div><div>")
-                        Jsoup.parse(text).select("div")?.forEach { scheduleHtml ->
+                .forEach { rowHtml ->
+                    rowHtml.select("td > div.kbcontent").forEachIndexed { dayIndex, cellHtml ->
+                        val text = cellHtml.outerHtml().replace(Regex("-{3,}"), "</div><div>")
+                        Jsoup.parse(text).select("div")?.forEach innerForEach@{ scheduleHtml ->
                             // 课程名称
                             val scheduleName = scheduleHtml.ownText()
+                            if (scheduleName==""){
+                                return@innerForEach
+                            }
                             // 老师名字
                             val teacherName = scheduleHtml.select("font[title=老师]")?.text() ?: ""
                             // 星期，上课节次
-                            val weeksTimesText = scheduleHtml.select("font[title=老师]").text() ?: ""
+                            val weeksTimesText = scheduleHtml.select("font[title=周次(节次)]").text() ?: ""
                             val weeks = parseWeeks(weeksTimesText)
                             val times = parseTimes(weeksTimesText)
                             // 教室
@@ -102,7 +105,7 @@ object ServiceClient {
 
     private fun parseWeeks(string: String): ArrayList<Int> {
         if (string == "") {
-            return arrayListOf()
+            return arrayListOf(0)
         }
         val weekText = (Regex("(.*)(?=\\(周\\))").find(string)?.value) ?: return arrayListOf()
         val weeksList = ArrayList<Int>()
@@ -116,7 +119,7 @@ object ServiceClient {
 
     private fun parseTimes(string: String): ArrayList<Int> {
         if (string == "") {
-            return arrayListOf()
+            return arrayListOf(0)
         }
         val timeText = (Regex("(?<=\\[).*(?=节])").find(string)?.value) ?: return arrayListOf()
         val weekList = ArrayList<Int>()
