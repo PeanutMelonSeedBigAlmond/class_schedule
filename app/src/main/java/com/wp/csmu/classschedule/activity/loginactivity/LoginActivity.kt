@@ -9,6 +9,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
 import com.wp.csmu.classschedule.activity.mainactivity.MainActivity
+import com.wp.csmu.classschedule.application.MyApplication
 import com.wp.csmu.classschedule.data.sharedpreferences.TimetableViewConfigData
 import com.wp.csmu.classschedule.data.sharedpreferences.User
 import com.wp.csmu.classschedule.exception.InvalidPasswordException
@@ -51,8 +52,6 @@ class LoginActivity : BaseActivity() {
             e.printStackTrace()
             onOperationFailed(e)
         }
-        val im = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        im.hideSoftInputFromWindow(loginTextInputLayout1!!.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)
     }
 
     private fun showTermSelection(terms:HashMap<Pair<String,String>,Boolean>){
@@ -83,11 +82,15 @@ class LoginActivity : BaseActivity() {
             try {
                 val termBeginsTime= withContext(Dispatchers.IO){ ServiceClient.getTermBeginsTime(selectedTermId) }
                 //写入开学时间
-                val timetableViewConfigData = AnyPref.get(TimetableViewConfigData::class.java)
-                timetableViewConfigData.termBeginsTime = termBeginsTime
+                val config=AnyPref.get(TimetableViewConfigData::class.java)
+                config.termBeginsTime=termBeginsTime
+                AnyPref.put(config)
                 val schedule= withContext(Dispatchers.IO){ ServiceClient.getScheduleList(selectedTermId) }
                 //写入课程
                 IO.writeSchedule(schedule)
+
+                MyApplication.configData=config
+
                 startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                 finish()
             }catch (e:Exception){

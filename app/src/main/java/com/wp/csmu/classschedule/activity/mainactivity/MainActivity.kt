@@ -6,28 +6,25 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.SeekBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
-import com.wp.csmu.classschedule.data.sharedpreferences.TimetableViewConfigData
+import com.wp.csmu.classschedule.application.MyApplication
 import com.wp.csmu.classschedule.fragment.ScheduleFragment
 import com.wp.csmu.classschedule.io.IO
+import com.wp.csmu.classschedule.utils.DateUtils
 import com.wp.csmu.classschedule.view.scheduletable.AppSubjects
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.weeks_classes_selector.*
-import net.nashlegend.anypref.AnyPref
 
 class MainActivity : BaseActivity() {
-    var currentWeek = 0
     var lastToolbarClickTime: Long = -1500
-    private lateinit var configData: TimetableViewConfigData
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initActionBar()
-        initConfig()
         loadData()
         initViewPager()
     }
@@ -36,30 +33,32 @@ class MainActivity : BaseActivity() {
         setSupportActionBar(mainToolBar)
         mainToolBar.setOnClickListener {
             val currentTime = System.currentTimeMillis()
-            if (currentTime - lastToolbarClickTime > 500) {
-                lastToolbarClickTime = currentTime
-            } else {
-                mainViewPager.currentItem = currentWeek - 1
-                lastToolbarClickTime = currentTime
-            }
-        }
-    }
 
-    private fun initConfig() {
-        configData = AnyPref.get(TimetableViewConfigData::class.java)
+            if (currentTime - lastToolbarClickTime <= 500) {
+                gotoCurrentWeek()
+            }
+
+            lastToolbarClickTime = currentTime
+        }
     }
 
     private fun initViewPager() {
         mainViewPager.adapter = object : FragmentStatePagerAdapter(supportFragmentManager) {
-            override fun getCount(): Int = configData.weeksOfTerm
+            override fun getCount(): Int = MyApplication.configData.weeksOfTerm
 
             override fun getItem(position: Int): Fragment = ScheduleFragment.newInstance(position + 1)
         }
         mainViewPager.addOnPageChangeListener(MyOnPageChangeListener())
+
+        gotoCurrentWeek()
     }
 
     private fun loadData() {
         AppSubjects.subjects = IO.readSchedule()
+    }
+
+    private fun gotoCurrentWeek() {
+        mainViewPager.currentItem = DateUtils.getCurrentWeek(MyApplication.configData.termBeginsTime) - 1
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -70,15 +69,21 @@ class MainActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.gotoWeek -> {
-                val config = AnyPref.get(TimetableViewConfigData::class.java)
-                val weeksOfTerm = config.weeksOfTerm
                 val view = LayoutInflater.from(this).inflate(R.layout.weeks_classes_selector, null, false)
-                weeksClassesSelectorTextView2.text = "1"
-                weeksClassesSelectorTextView3.text = weeksOfTerm.toString()
-                weeksClassesSelectorSeekBar.max = weeksOfTerm - 1
-                weeksClassesSelectorSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                val tv1: TextView = view.findViewById(R.id.weeksClassesSelectorTextView1)
+                val tv2: TextView = view.findViewById(R.id.weeksClassesSelectorTextView2)
+                val tv3: TextView = view.findViewById(R.id.weeksClassesSelectorTextView3)
+                val sb: SeekBar = view.findViewById(R.id.weeksClassesSelectorSeekBar)
+
+                tv1.text = (mainViewPager.currentItem+1).toString()
+                sb.progress = mainViewPager.currentItem
+
+                tv2.text = "1"
+                tv3.text = MyApplication.configData.weeksOfTerm.toString()
+                sb.max = MyApplication.configData.weeksOfTerm - 1
+                sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                        weeksClassesSelectorTextView1.text = (progress + 1).toString()
+                        tv1.text = (progress + 1).toString()
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -88,7 +93,8 @@ class MainActivity : BaseActivity() {
 
                 val dialog = AlertDialog.Builder(this)
                         .setView(view)
-                        .setPositiveButton("确定") { _, _ -> mainViewPager.currentItem = weeksClassesSelectorSeekBar.progress }
+                        .setTitle("跳转")
+                        .setPositiveButton("确定") { _, _ -> mainViewPager.currentItem = sb.progress }
                         .setNegativeButton("取消") { _, _ -> }
                 dialog.create().show()
 
