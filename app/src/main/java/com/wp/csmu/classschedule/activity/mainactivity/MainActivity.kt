@@ -2,6 +2,9 @@ package com.wp.csmu.classschedule.activity.mainactivity
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -34,6 +37,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.nashlegend.anypref.AnyPref
+import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import kotlin.system.exitProcess
 
@@ -48,6 +53,7 @@ class MainActivity : BaseActivity() {
         loadData()
         initViewPager()
         initDrawerLayout()
+        setBackground()
     }
 
     private fun initActionBar() {
@@ -241,6 +247,19 @@ class MainActivity : BaseActivity() {
         }
 
         override fun onPageScrollStateChanged(state: Int) {}
+    }
+
+    private fun setBackground() {
+        val background = File(IO.backgroundImg)
+        if (background.exists()) {
+            try {
+                val fis = FileInputStream(background)
+                val bitmap: Bitmap = BitmapFactory.decodeStream(fis)
+                mainConstraintLayout.background = BitmapDrawable(resources, bitmap)
+                fis.close()
+            } catch (e: Exception) {
+            }
+        }
     }
 
     // 寻找map中第一次出现value的index
