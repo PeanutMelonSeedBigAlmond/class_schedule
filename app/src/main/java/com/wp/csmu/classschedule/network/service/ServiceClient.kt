@@ -1,6 +1,6 @@
 package com.wp.csmu.classschedule.network.service
 
-import com.wp.csmu.classschedule.config.ApplicationConfig
+import com.wp.csmu.classschedule.application.MyApplication
 import com.wp.csmu.classschedule.exception.InvalidPasswordException
 import com.wp.csmu.classschedule.network.LoginState
 import com.wp.csmu.classschedule.network.NetworkConfig
@@ -17,7 +17,7 @@ object ServiceClient {
             .addInterceptor {
                 val request = it.request()
                 if (NetworkConfig.cookie == "") {
-                    val state = runBlocking { LoginClient.login(ApplicationConfig.userName!!, ApplicationConfig.password!!) }
+                    val state = runBlocking { LoginClient.login(MyApplication.user.account!!, MyApplication.user.password!!) }
                     if (state == LoginState.WRONG_PASSWORD) {
                         throw InvalidPasswordException()
                     }

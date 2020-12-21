@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
@@ -18,7 +17,10 @@ import com.wp.csmu.classschedule.network.LoginState
 import com.wp.csmu.classschedule.network.login.LoginClient
 import com.wp.csmu.classschedule.network.service.ServiceClient
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.nashlegend.anypref.AnyPref
 
 class LoginActivity : BaseActivity() {
@@ -45,7 +47,7 @@ class LoginActivity : BaseActivity() {
                 if (state == LoginState.WRONG_PASSWORD) {
                     throw InvalidPasswordException()
                 }
-                val terms= withContext(Dispatchers.IO){ ServiceClient.getTermId() }
+                val terms = withContext(Dispatchers.IO) { ServiceClient.getTermId() }
                 showTermSelection(terms)
             }
         } catch (e: Exception) {
@@ -54,46 +56,50 @@ class LoginActivity : BaseActivity() {
         }
     }
 
-    private fun showTermSelection(terms:HashMap<Pair<String,String>,Boolean>){
-        var selectedTermIndex=terms.findValue(true)
-        val termId=terms.keys.map { it.first }
-        val termName=terms.keys.map { it.second }
-        val dialog=AlertDialog.Builder(this)
+    private fun showTermSelection(terms: HashMap<Pair<String, String>, Boolean>) {
+        var selectedTermIndex = terms.findValue(true)
+        val termId = terms.keys.map { it.first }
+        val termName = terms.keys.map { it.second }
+        val dialog = AlertDialog.Builder(this)
                 .setTitle("选择学期")
                 .setSingleChoiceItems(
                         termName.toTypedArray(),
                         selectedTermIndex
-                ){ _, i -> selectedTermIndex=i }
+                ) { _, i -> selectedTermIndex = i }
                 .setPositiveButton(
                         "确定"
-                ){_,_-> onOperationSucceed(termId[selectedTermIndex]) }
+                ) { _, _ -> onOperationSucceed(termId[selectedTermIndex]) }
                 .setCancelable(false)
         dialog.create().show()
     }
 
-    private fun onOperationSucceed(selectedTermId:String) {
-        // 保存用户名密码
-        val user = User(
-                loginTextInputLayout1.editText!!.text.toString().trim(),
-                loginTextInputLayout2.editText!!.text.toString().trim()
-        )
-        AnyPref.put(user)
+    private fun onOperationSucceed(selectedTermId: String) {
+
         GlobalScope.launch(Dispatchers.Main) {
             try {
-                val termBeginsTime= withContext(Dispatchers.IO){ ServiceClient.getTermBeginsTime(selectedTermId) }
-                //写入开学时间
-                val config=AnyPref.get(TimetableViewConfigData::class.java)
-                config.termBeginsTime=termBeginsTime
-                AnyPref.put(config)
-                val schedule= withContext(Dispatchers.IO){ ServiceClient.getScheduleList(selectedTermId) }
+                val schedule = withContext(Dispatchers.IO) { ServiceClient.getScheduleList(selectedTermId) }
                 //写入课程
                 IO.writeSchedule(schedule)
+                // 保存用户名密码
+                val user = User(
+                        loginTextInputLayout1.editText!!.text.toString().trim(),
+                        loginTextInputLayout2.editText!!.text.toString().trim()
+                )
+                AnyPref.put(user)
+                MyApplication.user=user
 
-                MyApplication.configData=config
+                val termBeginsTime = withContext(Dispatchers.IO) { ServiceClient.getTermBeginsTime(selectedTermId) }
+                //写入开学时间
+                val config = AnyPref.get(TimetableViewConfigData::class.java)
+                config.termBeginsTime = termBeginsTime
+                config.currentTermId = selectedTermId
+                AnyPref.put(config)
+
+                MyApplication.configData = config
 
                 startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                 finish()
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 onOperationFailed(e)
             }
@@ -107,11 +113,11 @@ class LoginActivity : BaseActivity() {
     }
 
     // 寻找map中第一次出现value的index
-    private fun <K,V> Map<K,V>.findValue(value:V):Int{
-        var index=0
-        this.entries.forEachIndexed{ i, entry ->
-            if (entry.value==value){
-                index=i
+    private fun <K, V> Map<K, V>.findValue(value: V): Int {
+        var index = 0
+        this.entries.forEachIndexed { i, entry ->
+            if (entry.value == value) {
+                index = i
                 return@forEachIndexed
             }
         }
