@@ -2,10 +2,7 @@ package com.wp.csmu.classschedule.network.login
 
 import kotlinx.coroutines.Deferred
 import okhttp3.ResponseBody
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.*
 import java.io.InputStream
 
 interface LoginApi {
@@ -16,7 +13,7 @@ interface LoginApi {
     @FormUrlEncoded
     @POST("xk/LoginToXk")
     suspend fun login(
-            @Field("encoded") encoded: String
+            @Field("encoded") encoded: String,
     ): ResponseBody
 
     @POST("xk/LoginToXk")

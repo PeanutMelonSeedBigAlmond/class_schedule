@@ -20,6 +20,8 @@ object LoginClient {
             val newRequest=request.newBuilder()
                     .removeHeader("cookie")
                     .addHeader("cookie",cookie)
+                    .removeHeader("referer")
+                    .addHeader("referer",LoginApi.BASE_URL)
                     .build()
             return@addInterceptor it.proceed(newRequest)
         }
