@@ -14,6 +14,7 @@ import com.wp.csmu.classschedule.R;
 import com.wp.csmu.classschedule.activity.loginactivity.LoginActivity;
 import com.wp.csmu.classschedule.activity.mainactivity.MainActivity;
 import com.wp.csmu.classschedule.data.sharedpreferences.User;
+import com.wp.csmu.classschedule.io.IO;
 
 import net.nashlegend.anypref.AnyPref;
 
@@ -40,7 +41,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         int flag=0;
-        if (!checkAccount()){
+        if (!checkAccount()||!checkData()){
             flag=1;
         }
         handle.sendEmptyMessageDelayed(flag,300);
@@ -57,5 +58,14 @@ public class SplashActivity extends AppCompatActivity {
     private boolean checkAccount(){
         User user= AnyPref.get(User.class);
         return !("".equals(user.getAccount()) || "".equals(user.getPassword()));
+    }
+
+    private boolean checkData(){
+        try {
+            IO.readSchedule();
+        }catch (Exception e){
+            return false;
+        }
+        return true;
     }
 }
