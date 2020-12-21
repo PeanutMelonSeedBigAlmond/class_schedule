@@ -48,11 +48,11 @@ object ServiceClient {
      * 获取学期id
      * @return HashMap<Pair<String, String>, Boolean> （学期id - 学期名称）- 是否选中
      */
-    suspend fun getTermId(): HashMap<Pair<String, String>, Boolean> {
+    suspend fun getTermId(): LinkedHashMap<Pair<String, String>, Boolean> {
         val html = retrofit.getTermBeginsTime().string()
         val document = Jsoup.parse(html)
         val selectHtml = document.select("#xnxq01id > option")
-        val map = HashMap<Pair<String, String>, Boolean>()
+        val map = LinkedHashMap<Pair<String, String>, Boolean>()
         selectHtml.forEach {
             val termId = it.attr("value")
             val termName = it.text()

@@ -59,8 +59,8 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         //初始化适配器
         adapter = ScoreRecyclerAdapter(ArrayList(), this)
         recyclerView!!.adapter = adapter
-        swipeRefreshLayout!!.setOnRefreshListener { getScore1(termId[clickedItem]) }
-        getScore()
+        swipeRefreshLayout!!.setOnRefreshListener { getScore1() }
+        getScore(true)
     }
 
     override fun onClick(view: View, position: Int) {
@@ -93,21 +93,22 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         dialog.show()
     }
 
-    private fun getScore() {
+    // [useDefault]=true表示第一次启动时
+    private fun getScore(useDefault:Boolean=false) {
         GlobalScope.launch(Dispatchers.Main) {
             try {
                 swipeRefreshLayout!!.isRefreshing = true
                 val terms = withContext(Dispatchers.IO) { ServiceClient.getTermId() }
                 termId = terms.keys.map { it.first }.toMutableList().also { it.add(0, "") } as ArrayList<String>
                 termName = terms.keys.map { it.second }.toMutableList().also { it.add(0, "全部学期") } as ArrayList<String>
-                clickedItem = terms.findValue(true) + 1
-                withContext(Dispatchers.IO) { getScore1("") }
-                onOperationSucceed()
+                if(useDefault){
+                    clickedItem = terms.findValue(true) + 1
+                }
+                withContext(Dispatchers.IO) { getScore1() }
             } catch (e: Exception) {
                 e.printStackTrace()
                 onOperationFailed(e)
             }
-
         }
     }
 
@@ -134,11 +135,11 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         build.show()
     }
 
-    fun getScore1(termId: String) {
+    private fun getScore1() {
         GlobalScope.launch(Dispatchers.Main) {
             try {
                 swipeRefreshLayout!!.isRefreshing = true
-                data = withContext(Dispatchers.IO) { ServiceClient.queryGrades(termId) }
+                data = withContext(Dispatchers.IO) { ServiceClient.queryGrades(termId[clickedItem]) }
                 onOperationSucceed()
             } catch (e: Exception) {
                 e.printStackTrace()

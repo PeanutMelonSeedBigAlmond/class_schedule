@@ -11,13 +11,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
+import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.SettingActivity
+import com.wp.csmu.classschedule.application.MyApplication
 import com.wp.csmu.classschedule.io.IO
+import kotlinx.android.synthetic.main.activity_setting.*
+import net.nashlegend.anypref.AnyPref
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.system.exitProcess
 
 class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
     val CROP_CODE = 1
@@ -76,7 +80,7 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
                     .setNeutralButton("清除背景图片") { _, _ ->
                         run {
                             file.delete()
-                            (activity as SettingActivity).showTextWithSnackBar("设置成功，重启生效")
+                            (requireActivity() as SettingActivity).showRestartTip()
                         }
                     }
                     .show()
@@ -90,19 +94,18 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
 //        val intent = Intent(Intent.ACTION_GET_CONTENT)
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
-        activity!!.startActivityForResult(intent, SELECT_CODE)
+        requireActivity().startActivityForResult(intent, SELECT_CODE)
     }
 
     private fun showWeeksSelect() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(context!!)
-        val view = LayoutInflater.from(context!!).inflate(R.layout.weeks_classes_selector, null)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.weeks_classes_selector, null)
         val tv1 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView1)
         val tv2 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView2)
         val tv3 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView3)
         val seekBar = view.findViewById<SeekBar>(R.id.weeksClassesSelectorSeekBar)
         seekBar.max = 50
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        seekBar.progress = sharedPreferences.getInt("weeks_of_term", 20)
+        seekBar.progress = MyApplication.configData.weeksOfTerm
         tv1.text = seekBar.progress.toString()
         tv2.text = "0"
         tv3.text = seekBar.max.toString()
@@ -120,33 +123,28 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
             }
         })
         builder.setTitle("学期周数").setView(view).setPositiveButton("确定") { _, _ ->
-            run {
-                val editor = sharedPreferences.edit()
-                editor.putInt("weeks_of_term", seekBar.progress)
-                editor.commit()
-            }
+            MyApplication.configData.weeksOfTerm = seekBar.progress
+            AnyPref.put(MyApplication.configData)
+            (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
-                    run {
-                        val editor = sharedPreferences.edit()
-                        editor.putInt("weeks_of_term", 20)
-                        editor.commit()
-                    }
+                    MyApplication.configData.weeksOfTerm = 20
+                    AnyPref.put(MyApplication.configData)
+                    (requireActivity() as SettingActivity).showRestartTip()
                 }
                 .show()
     }
 
     private fun showClassesSelect() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(context!!)
-        val view = LayoutInflater.from(context!!).inflate(R.layout.weeks_classes_selector, null)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.weeks_classes_selector, null)
         val tv1 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView1)
         val tv2 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView2)
         val tv3 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView3)
         val seekBar = view.findViewById<SeekBar>(R.id.weeksClassesSelectorSeekBar)
         seekBar.max = 20
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        seekBar.progress = sharedPreferences.getInt("classes_of_day", 10)
+        seekBar.progress = MyApplication.configData.classesOfDay
         tv1.text = seekBar.progress.toString()
         tv2.text = "0"
         tv3.text = seekBar.max.toString()
@@ -164,52 +162,42 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
             }
         })
         builder.setTitle("一天课程数").setView(view).setPositiveButton("确定") { _, _ ->
-            run {
-                val editor = sharedPreferences.edit()
-                editor.putInt("classes_of_day", seekBar.progress)
-                editor.commit()
-            }
+            MyApplication.configData.classesOfDay = seekBar.progress
+            AnyPref.put(MyApplication.configData)
+            (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
-                    run {
-                        val editor = sharedPreferences.edit()
-                        editor.putInt("classes_of_day", 10)
-                        editor.commit()
-                    }
+                    MyApplication.configData.classesOfDay = seekBar.progress
+                    AnyPref.put(MyApplication.configData)
+                    (requireActivity() as SettingActivity).showRestartTip()
                 }
                 .show()
     }
 
     private fun showBeginTimeSelect() {
         Toast.makeText(context, "为了周次计算的准确，建议选择周一", Toast.LENGTH_SHORT).show()
-        val builder = androidx.appcompat.app.AlertDialog.Builder(context!!)
-        val view = LayoutInflater.from(context!!).inflate(R.layout.term_begins_time_selector, null)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.term_begins_time_selector, null)
         val datePicker = view.findViewById<DatePicker>(R.id.termBeginsTimeSelectorDatePicker)
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val sdf = SimpleDateFormat("yyyy-MM-dd")
-        val time = sharedPreferences.getString("term_begins_time", sdf.format(Date()))
+        val time = MyApplication.configData.termBeginsTime
         val date = Calendar.getInstance()
         date.time = sdf.parse(time)
         datePicker.init(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH)) { _, _, _, _ -> }
 
         builder.setTitle("开学日期").setView(view).setPositiveButton("确定") { _, _ ->
-            run {
-                val editor = sharedPreferences.edit()
-                editor.putString("term_begins_time", "${datePicker.year}-${datePicker.month + 1}-${datePicker.dayOfMonth}")
-                editor.commit()
-            }
+            MyApplication.configData.termBeginsTime = "${datePicker.year}-${datePicker.month + 1}-${datePicker.dayOfMonth}"
+            AnyPref.put(MyApplication.configData)
+            (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
                     run {
-                        if (sharedPreferences.contains("term_begins_time")) {
-                            val editor = sharedPreferences.edit()
-                            editor.remove("term_begins_time")
-                            editor.commit()
-                        }
+                        MyApplication.configData.termBeginsTime = ""
+                        AnyPref.put(MyApplication.configData)
+                        (requireActivity() as SettingActivity).showRestartTip()
                     }
-
                 }
                 .show()
     }

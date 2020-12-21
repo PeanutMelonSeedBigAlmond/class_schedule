@@ -13,6 +13,7 @@ import com.wp.csmu.classschedule.io.IO
 import com.wp.csmu.classschedule.utils.ViewUtils
 import kotlinx.android.synthetic.main.activity_setting.*
 import java.io.File
+import kotlin.system.exitProcess
 
 class SettingActivity : BaseActivity() {
 
@@ -33,8 +34,6 @@ class SettingActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             onResultOk(requestCode, data)
-        } else {
-
         }
     }
 
@@ -46,7 +45,7 @@ class SettingActivity : BaseActivity() {
             //裁剪图片成功，启动处理图片
             fragment.CROP_CODE -> startActivityForResult(Intent(this, ImageProcessActivity::class.java), fragment.SUCCESS_CODE)
             //处理成功
-            fragment.SUCCESS_CODE -> showTextWithSnackBar("设置成功，重启生效")
+            fragment.SUCCESS_CODE -> showRestartTip()
         }
     }
 
@@ -67,7 +66,12 @@ class SettingActivity : BaseActivity() {
         startActivityForResult(intent, 1)
     }
 
-    public fun showTextWithSnackBar(text: String) {
-        Snackbar.make(settingCoordinatorLayout, text, Snackbar.LENGTH_SHORT).show()
+    fun showRestartTip() {
+        Snackbar.make(settingCoordinatorLayout!!, "重启生效", Snackbar.LENGTH_INDEFINITE).setAction("重启") {
+            val intent = baseContext.packageManager
+                    .getLaunchIntentForPackage(baseContext.packageName)
+            startActivity(intent)
+            exitProcess(0)
+        }.show()
     }
 }
