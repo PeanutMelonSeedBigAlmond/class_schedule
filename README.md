@@ -4,6 +4,10 @@
 
 大体思路：模拟登录网页 -> 获取网页html源代码 -> 解析数据并展示
 
+
+
+CI构建状态：[![Build Status](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_apis/build/status/PeanutMelonSeedBigAlmond.class_schedule?branchName=dev)](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_build/latest?definitionId=1&branchName=dev)
+
 # 已有功能
 
 - [x] 获取课程安排
