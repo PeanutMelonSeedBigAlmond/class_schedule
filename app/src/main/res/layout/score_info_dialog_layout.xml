@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="学分"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv1"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="学年学期"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv2"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="课程属性"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv3"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="考试性质"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv4"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="课程性质"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv5"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="技能成绩"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv6"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="平时成绩"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTv8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTv7"
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:text="卷面成绩"
+        android:textColor="#80000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogCredit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv1"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv1"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogTerm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogCredit"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv2"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv2"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogSubjectAttr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogTerm"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv3"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv3"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogExamAttr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogSubjectAttr"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv4"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv4"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogSubjectNature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogExamAttr"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv5"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv5"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogSkillGrade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogSubjectNature"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv6"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv6"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogPerformanceGrade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogSkillGrade"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv7"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv7"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+    <TextView
+        android:id="@+id/scoreInfoDialogKnowledgePoints"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreInfoDialogPerformanceGrade"
+        android:layout_alignBaseline="@id/scoreInfoDialogTv8"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@id/scoreInfoDialogTv8"
+        android:gravity="end"
+        android:padding="4dp"
+        android:textColor="#ff000000" />
+
+</RelativeLayout>

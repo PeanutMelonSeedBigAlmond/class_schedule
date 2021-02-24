@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="schedule_data"
+        android:title="课程数据">
+        <Preference
+            android:key="term_begins_time"
+            android:title="开学时间" />
+        <Preference
+            android:defaultValue="20"
+            android:key="weeks_of_term"
+            android:title="学期周数" />
+        <Preference
+            android:defaultValue="10"
+            android:key="classes_of_day"
+            android:title="一天课程数" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="show_weekday"
+            android:title="显示周末" />
+        <Preference
+            android:key="set_background"
+            android:summary="设置首页课程表的背景图片"
+            android:title="背景图片" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

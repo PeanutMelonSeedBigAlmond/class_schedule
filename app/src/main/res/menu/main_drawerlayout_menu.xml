@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mainDrawerClass"
+        android:checkable="true"
+        android:checked="true"
+        android:icon="@drawable/ic_schedule_black_24dp"
+        android:title="课程" />
+    <item
+        android:id="@+id/mainDrawerScore"
+        android:checkable="false"
+        android:icon="@drawable/ic_score_black_24dp"
+        android:title="考试成绩" />
+    <item
+        android:id="@+id/mainDrawerRefresh"
+        android:checkable="false"
+        android:icon="@drawable/ic_refresh_black_24dp"
+        android:title="刷新课程"/>
+    <item
+        android:id="@+id/mainDrawerSetting"
+        android:checkable="false"
+        android:icon="@drawable/ic_settings_black_24dp"
+        android:title="设置" />
+    <item
+        android:id="@+id/mainDrawerAbout"
+        android:checkable="false"
+        android:icon="@drawable/ic_info_outline_black_24dp"
+        android:title="关于" />
+</menu>
