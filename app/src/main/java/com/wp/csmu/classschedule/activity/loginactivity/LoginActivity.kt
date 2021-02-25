@@ -8,7 +8,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
 import com.wp.csmu.classschedule.activity.mainactivity.MainActivity
-import com.wp.csmu.classschedule.application.MyApplication
+import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.data.sharedpreferences.TimetableViewConfigData
 import com.wp.csmu.classschedule.data.sharedpreferences.User
 import com.wp.csmu.classschedule.exception.InvalidPasswordException
@@ -86,7 +86,7 @@ class LoginActivity : BaseActivity() {
                         loginTextInputLayout2.editText!!.text.toString().trim()
                 )
                 AnyPref.put(user)
-                MyApplication.user=user
+                MyApplicationLike.user = user
 
                 val termBeginsTime = withContext(Dispatchers.IO) { ServiceClient.getTermBeginsTime(selectedTermId) }
                 //写入开学时间
@@ -95,7 +95,7 @@ class LoginActivity : BaseActivity() {
                 config.currentTermId = selectedTermId
                 AnyPref.put(config)
 
-                MyApplication.configData = config
+                MyApplicationLike.configData = config
 
                 startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                 finish()

@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.tencent.tinker.patch'
+apply from: 'tinker-support.gradle'
 
 // 版本号
 def now = Calendar.getInstance()
@@ -13,22 +15,46 @@ def appVersionCode = Integer.valueOf(String.format("%02d%02d%02d", year, month, 
 def appVersionName = "1.2.0"
 
 // bugly AppId
-def buglyAppId=System.getenv("CLASSSCHEDULEAPPID")?:""
+def buglyAppId = System.getenv("CLASSSCHEDULEAPPID") ?: ""
+
+// 本地签名配置
+def keyPropertiesFile = file("key.properties")
+def keyProperties = keyPropertiesFile.exists() ? new Properties() : null
+if (keyProperties != null) {
+// 有签名配置情况下优先使用配置文件
+    keyProperties.load(new FileInputStream(keyPropertiesFile))
+}
 
 android {
-    // 签名文件密码以环境变量形式传入
+
     signingConfigs {
         release {
-            keyAlias System.getenv("KEYRELEASENAME")
-            keyPassword System.getenv("KEYRELEASEPASSWORD")
-            storeFile file(System.getenv("AGENT_TEMPDIRECTORY")+"/"+System.getenv("KEYSTOREFILE"))
-            storePassword System.getenv("KEYSTOREPASSWORD")
+            if (keyProperties!=null){
+                keyAlias keyProperties["release.keyName"]
+                keyPassword keyProperties["release.keyPassword"]
+                storeFile file(keyProperties["keystorePath"])
+                storePassword keyProperties["keystorePassword"]
+            }else {
+                // 签名文件密码以环境变量形式传入
+                keyAlias System.getenv("KEYRELEASENAME")
+                keyPassword System.getenv("KEYRELEASEPASSWORD")
+                storeFile file(System.getenv("AGENT_TEMPDIRECTORY") + "/" + System.getenv("KEYSTOREFILE"))
+                storePassword System.getenv("KEYSTOREPASSWORD")
+            }
         }
         debug {
-            keyAlias System.getenv("KEYDEBUGNAME")
-            keyPassword System.getenv("KEYDEBUGPASSWORD")
-            storeFile file(System.getenv("AGENT_TEMPDIRECTORY")+"/"+System.getenv("KEYSTOREFILE"))
-            storePassword System.getenv("KEYSTOREPASSWORD")
+            if (keyProperties!=null){
+                keyAlias keyProperties["debug.keyName"]
+                keyPassword keyProperties["debug.keyPassword"]
+                storeFile file(keyProperties["keystorePath"])
+                storePassword keyProperties["keystorePassword"]
+            }else {
+                // 签名文件密码以环境变量形式传入
+                keyAlias System.getenv("KEYDEBUGNAME")
+                keyPassword System.getenv("KEYDEBUGPASSWORD")
+                storeFile file(System.getenv("AGENT_TEMPDIRECTORY") + "/" + System.getenv("KEYSTOREFILE"))
+                storePassword System.getenv("KEYSTOREPASSWORD")
+            }
         }
     }
     defaultConfig {
@@ -42,17 +68,16 @@ android {
     }
     buildTypes {
         release {
-            buildConfigField "String","APPID","\"$buglyAppId\""
+            buildConfigField "String", "APPID", "\"$buglyAppId\""
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
         debug {
-            buildConfigField "String","APPID","\"$buglyAppId\""
+            buildConfigField "String", "APPID", "\"$buglyAppId\""
             signingConfig signingConfigs.debug
         }
     }
-    apply from: 'tinker-support.gradle'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

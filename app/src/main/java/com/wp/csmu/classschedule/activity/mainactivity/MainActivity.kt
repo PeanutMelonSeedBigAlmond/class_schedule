@@ -24,7 +24,7 @@ import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
 import com.wp.csmu.classschedule.activity.ScoreActivity
 import com.wp.csmu.classschedule.activity.SettingActivity
-import com.wp.csmu.classschedule.application.MyApplication
+import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.fragment.ScheduleFragment
 import com.wp.csmu.classschedule.io.IO
 import com.wp.csmu.classschedule.network.service.ServiceClient
@@ -71,7 +71,7 @@ class MainActivity : BaseActivity() {
 
     private fun initViewPager() {
         this.adapter = object : FragmentStatePagerAdapter(supportFragmentManager) {
-            override fun getCount(): Int = MyApplication.configData.weeksOfTerm
+            override fun getCount(): Int = MyApplicationLike.configData.weeksOfTerm
 
             override fun getItem(position: Int): Fragment = ScheduleFragment.newInstance(position + 1)
         }
@@ -85,7 +85,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun gotoCurrentWeek() {
-        mainViewPager.currentItem = DateUtils.getCurrentWeek(MyApplication.configData.termBeginsTime) - 1
+        mainViewPager.currentItem = DateUtils.getCurrentWeek(MyApplicationLike.configData.termBeginsTime) - 1
     }
 
     private fun initDrawerLayout() {
@@ -105,19 +105,19 @@ class MainActivity : BaseActivity() {
                 }
                 R.id.mainDrawerSetting -> startActivity(Intent(this@MainActivity, SettingActivity::class.java))
                 R.id.mainDrawerAbout -> try {
-                    val inputStream = assets.open("about.html");
-                    val text = IO.readString(inputStream);
-                    val view = LayoutInflater.from(this@MainActivity).inflate(R.layout.about_dialog_layout, null, false);
-                    val textView: TextView = view.findViewById(R.id.aboutDialogTextView);
-                    val builder = AlertDialog.Builder(this@MainActivity);
+                    val inputStream = assets.open("about.html")
+                    val text = IO.readString(inputStream)
+                    val view = LayoutInflater.from(this@MainActivity).inflate(R.layout.about_dialog_layout, null, false)
+                    val textView: TextView = view.findViewById(R.id.aboutDialogTextView)
+                    val builder = AlertDialog.Builder(this@MainActivity)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         //api version > 24 (android n)
-                        textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT);
+                        textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT)
                     } else {
-                        textView.text = Html.fromHtml(text);
+                        textView.text = Html.fromHtml(text)
                     }
-                    textView.movementMethod = LinkMovementMethod.getInstance();
-                    builder.setTitle("关于").setView(view).show();
+                    textView.movementMethod = LinkMovementMethod.getInstance()
+                    builder.setTitle("关于").setView(view).show()
                 } catch (e: IOException) {
                     e.printStackTrace()
                     Snackbar.make(loginCoordinatorLayout!!, e.toString(), Snackbar.LENGTH_SHORT).show()
@@ -166,8 +166,8 @@ class MainActivity : BaseActivity() {
                 IO.writeSchedule(schedule)
 
                 val termBeginsTime = withContext(Dispatchers.IO) { ServiceClient.getTermBeginsTime(selectedTermId) }
-                val termId = MyApplication.configData.currentTermId
-                val config = MyApplication.configData.also {
+                val termId = MyApplicationLike.configData.currentTermId
+                val config = MyApplicationLike.configData.also {
                     it.termBeginsTime = termBeginsTime
                     it.currentTermId = selectedTermId
                 }
@@ -181,7 +181,7 @@ class MainActivity : BaseActivity() {
                         startActivity(intent)
                         exitProcess(0)
                     }.show()
-                }else{
+                } else {
                     Snackbar.make(mainCoordinatorLayout!!, "刷新成功", Snackbar.LENGTH_SHORT).show()
                 }
 
@@ -215,8 +215,8 @@ class MainActivity : BaseActivity() {
                 sb.progress = mainViewPager.currentItem
 
                 tv2.text = "1"
-                tv3.text = MyApplication.configData.weeksOfTerm.toString()
-                sb.max = MyApplication.configData.weeksOfTerm - 1
+                tv3.text = MyApplicationLike.configData.weeksOfTerm.toString()
+                sb.max = MyApplicationLike.configData.weeksOfTerm - 1
                 sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                         tv1.text = (progress + 1).toString()

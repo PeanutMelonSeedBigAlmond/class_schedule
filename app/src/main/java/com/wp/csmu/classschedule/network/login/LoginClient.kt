@@ -1,7 +1,6 @@
 package com.wp.csmu.classschedule.network.login
 
 import android.util.Base64
-import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.wp.csmu.classschedule.network.LoginState
 import com.wp.csmu.classschedule.network.NetworkConfig
 import com.wp.csmu.classschedule.network.cookie.CookieClient
@@ -11,17 +10,17 @@ import org.jsoup.Jsoup
 import retrofit2.Retrofit
 
 object LoginClient {
-    private var tempCookie=""
+    private var tempCookie = ""
     private val client = OkHttpClient.Builder().addInterceptor {
         val request = it.request()
         if (NetworkConfig.cookie == "") {
             val cookie = runBlocking { CookieClient.getCookie() }
-            tempCookie=cookie
-            val newRequest=request.newBuilder()
+            tempCookie = cookie
+            val newRequest = request.newBuilder()
                     .removeHeader("cookie")
-                    .addHeader("cookie",cookie)
+                    .addHeader("cookie", cookie)
                     .removeHeader("referer")
-                    .addHeader("referer",LoginApi.BASE_URL)
+                    .addHeader("referer", LoginApi.BASE_URL)
                     .build()
             return@addInterceptor it.proceed(newRequest)
         }
@@ -39,7 +38,7 @@ object LoginClient {
         val response = retrofit.login(encoded).string()
         val document = Jsoup.parse(response)
         if (document.title() == "学生个人中心") {
-            NetworkConfig.cookie= tempCookie
+            NetworkConfig.cookie = tempCookie
             return LoginState.SUCCESS
         } else {
             return LoginState.WRONG_PASSWORD

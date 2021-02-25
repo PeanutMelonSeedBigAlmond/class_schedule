@@ -1,6 +1,6 @@
 package com.wp.csmu.classschedule.io;
 
-import com.wp.csmu.classschedule.application.MyApplication;
+import com.wp.csmu.classschedule.application.MyApplicationLike;
 import com.wp.csmu.classschedule.view.scheduletable.Subjects;
 
 import java.io.BufferedReader;
@@ -14,12 +14,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
 public class IO {
-    public static String scheduleFile = MyApplication.getContext().getExternalFilesDir("") + "/schedule.dat";
-    public static String backgroundImg = MyApplication.getContext().getExternalFilesDir("") + "/background.bg";
-    public static String verifyCodeImg = MyApplication.getContext().getExternalFilesDir("") + "/verifyCode";
+    public static String scheduleFile = MyApplicationLike.getContext().getExternalFilesDir("") + "/schedule.dat";
+    public static String backgroundImg = MyApplicationLike.getContext().getExternalFilesDir("") + "/background.bg";
+    public static String verifyCodeImg = MyApplicationLike.getContext().getExternalFilesDir("") + "/verifyCode";
 
     public static HashSet<Subjects> readSchedule() throws IOException, ClassNotFoundException {
         ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(scheduleFile));
@@ -36,13 +37,9 @@ public class IO {
 
     public static String readString(InputStream inputStream) {
         InputStreamReader inputStreamReader = null;
-        try {
-            inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-        } catch (UnsupportedEncodingException e1) {
-            e1.printStackTrace();
-        }
+        inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(inputStreamReader);
-        StringBuffer sb = new StringBuffer("");
+        StringBuffer sb = new StringBuffer();
         String line;
         try {
             while ((line = reader.readLine()) != null) {

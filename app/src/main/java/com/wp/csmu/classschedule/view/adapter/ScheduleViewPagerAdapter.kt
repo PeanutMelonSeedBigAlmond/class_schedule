@@ -15,7 +15,7 @@ class ScheduleViewPagerAdapter(fm: FragmentManager, var fragments: List<Schedule
         return fragments.size
     }
 
-    public fun fragmentChanged(fragments: List<ScheduleFragment>) {
+    fun fragmentChanged(fragments: List<ScheduleFragment>) {
         this.fragments = fragments
         notifyDataSetChanged()
     }

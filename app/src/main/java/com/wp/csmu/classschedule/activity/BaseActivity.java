@@ -1,6 +1,7 @@
 package com.wp.csmu.classschedule.activity;
 
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BaseActivity extends AppCompatActivity {
-    private static List<AppCompatActivity>activities=new ArrayList<>();
+    private static final List<AppCompatActivity> activities = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,14 +31,14 @@ public class BaseActivity extends AppCompatActivity {
         activities.remove(this);
     }
 
-    public final void finishAllActivity(){
-        for (AppCompatActivity activity:activities){
+    public final void finishAllActivity() {
+        for (AppCompatActivity activity : activities) {
             activity.finish();
         }
     }
 
-    public final void finishActivity(AppCompatActivity activity){
-        if (activities.contains(activity)){
+    public final void finishActivity(AppCompatActivity activity) {
+        if (activities.contains(activity)) {
             activity.finish();
         }
     }
