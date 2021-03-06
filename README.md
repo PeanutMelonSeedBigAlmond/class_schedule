@@ -6,7 +6,7 @@
 
 
 
-CI构建状态：[![Build Status](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_apis/build/status/PeanutMelonSeedBigAlmond.class_schedule?branchName=main)](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_build/latest?definitionId=1&branchName=main)
+CI构建状态：[![Build Status](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_apis/build/status/PeanutMelonSeedBigAlmond.class_schedule?branchName=dev)](https://dev.azure.com/PeanutMelonSeedBigAlmond/ClassSchedule/_build/latest?definitionId=1&branchName=dev)
 
 # 已有功能
 
