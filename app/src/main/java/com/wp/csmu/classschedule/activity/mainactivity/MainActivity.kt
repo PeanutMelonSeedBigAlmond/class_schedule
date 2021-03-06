@@ -86,6 +86,7 @@ class MainActivity : BaseActivity() {
 
     private fun gotoCurrentWeek() {
         mainViewPager.currentItem = DateUtils.getCurrentWeek(MyApplicationLike.configData.termBeginsTime) - 1
+        supportActionBar!!.subtitle = "第" + (mainViewPager.currentItem + 1) + "周"
     }
 
     private fun initDrawerLayout() {
@@ -173,27 +174,21 @@ class MainActivity : BaseActivity() {
                 }
                 AnyPref.put(config)
                 mainSwipeRefreshLayout.isRefreshing = false
-
-                if (termId != selectedTermId) {
-                    Snackbar.make(mainCoordinatorLayout!!, "学期已经更新，重启生效", Snackbar.LENGTH_INDEFINITE).setAction("重启") {
-                        val intent = baseContext.packageManager
-                                .getLaunchIntentForPackage(baseContext.packageName)
-                        startActivity(intent)
-                        exitProcess(0)
-                    }.show()
-                } else {
-                    Snackbar.make(mainCoordinatorLayout!!, "刷新成功", Snackbar.LENGTH_SHORT).show()
-                }
-
+                Snackbar.make(mainCoordinatorLayout!!, "数据已经更新，重启生效", Snackbar.LENGTH_INDEFINITE).setAction("重启") {
+                    val intent = baseContext.packageManager
+                            .getLaunchIntentForPackage(baseContext.packageName)
+                    startActivity(intent)
+                    exitProcess(0)
+                }.show()
             } catch (e: Exception) {
                 e.printStackTrace()
                 onOperationFailed(e)
-                mainSwipeRefreshLayout.isRefreshing = false
             }
         }
     }
 
     private fun onOperationFailed(reason: Exception) {
+        mainSwipeRefreshLayout.isRefreshing = false
         Snackbar.make(mainCoordinatorLayout!!, reason.toString(), Snackbar.LENGTH_SHORT).show()
     }
 
