@@ -1,4 +1,4 @@
 /build
-proguard-rules.pro
 ./debug
 ./release
+key.properties

@@ -94,14 +94,14 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     }
 
     // [useDefault]=true表示第一次启动时
-    private fun getScore(useDefault:Boolean=false) {
+    private fun getScore(useDefault: Boolean = false) {
         GlobalScope.launch(Dispatchers.Main) {
             try {
                 swipeRefreshLayout!!.isRefreshing = true
                 val terms = withContext(Dispatchers.IO) { ServiceClient.getTermId() }
                 termId = terms.keys.map { it.first }.toMutableList().also { it.add(0, "") } as ArrayList<String>
                 termName = terms.keys.map { it.second }.toMutableList().also { it.add(0, "全部学期") } as ArrayList<String>
-                if(useDefault){
+                if (useDefault) {
                     clickedItem = terms.findValue(true) + 1
                 }
                 withContext(Dispatchers.IO) { getScore1() }

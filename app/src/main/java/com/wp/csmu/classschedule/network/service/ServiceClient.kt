@@ -1,6 +1,6 @@
 package com.wp.csmu.classschedule.network.service
 
-import com.wp.csmu.classschedule.application.MyApplication
+import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.exception.InvalidPasswordException
 import com.wp.csmu.classschedule.network.LoginState
 import com.wp.csmu.classschedule.network.NetworkConfig
@@ -17,16 +17,16 @@ object ServiceClient {
             .addInterceptor {
                 val request = it.request()
                 if (NetworkConfig.cookie == "") {
-                    val state = runBlocking { LoginClient.login(MyApplication.user.account!!, MyApplication.user.password!!) }
+                    val state = runBlocking { LoginClient.login(MyApplicationLike.user.account!!, MyApplicationLike.user.password!!) }
                     if (state == LoginState.WRONG_PASSWORD) {
                         throw InvalidPasswordException()
                     }
                 }
-                val newRequest=request.newBuilder()
+                val newRequest = request.newBuilder()
                         .removeHeader("cookie")
-                        .addHeader("cookie",NetworkConfig.cookie)
+                        .addHeader("cookie", NetworkConfig.cookie)
                         .removeHeader("referer")
-                        .addHeader("referer",request.url.toString())
+                        .addHeader("referer", request.url.toString())
                         .build()
                 return@addInterceptor it.proceed(newRequest)
             }.build()
@@ -75,13 +75,14 @@ object ServiceClient {
                         Jsoup.parse(text).select("div")?.forEach innerForEach@{ scheduleHtml ->
                             // 课程名称
                             val scheduleName = scheduleHtml.ownText()
-                            if (scheduleName==""){
+                            if (scheduleName == "") {
                                 return@innerForEach
                             }
                             // 老师名字
                             val teacherName = scheduleHtml.select("font[title=老师]")?.text() ?: ""
                             // 星期，上课节次
-                            val weeksTimesText = scheduleHtml.select("font[title=周次(节次)]").text() ?: ""
+                            val weeksTimesText = scheduleHtml.select("font[title=周次(节次)]").text()
+                                    ?: ""
                             val weeks = parseWeeks(weeksTimesText)
                             val times = parseTimes(weeksTimesText)
                             // 教室

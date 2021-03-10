@@ -9,14 +9,14 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.wp.csmu.classschedule.R
-import com.wp.csmu.classschedule.application.MyApplication
+import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.utils.DateUtils
 import com.wp.csmu.classschedule.view.scheduletable.AppSubjects
 import com.zhuangfei.timetable.TimetableView
 import com.zhuangfei.timetable.listener.OnItemClickAdapter
 import com.zhuangfei.timetable.model.Schedule
 
-class ScheduleFragment private constructor(): Fragment() {
+class ScheduleFragment private constructor() : Fragment() {
     companion object {
         fun newInstance(index: Int): ScheduleFragment {
             val fragment = ScheduleFragment()
@@ -44,14 +44,14 @@ class ScheduleFragment private constructor(): Fragment() {
         timetableView = view.findViewById(R.id.scheduleFragmentTimeTableView)
         timetableView.alpha(0f, 0f, 1f)
         timetableView.source(AppSubjects.subjects.toMutableList())
-        timetableView.curWeek(DateUtils.getCurrentWeek(MyApplication.configData.termBeginsTime))
-        timetableView.isShowWeekends(MyApplication.configData.isShowWeekday)
-        timetableView.maxSlideItem(MyApplication.configData.classesOfDay)
+        timetableView.curWeek(DateUtils.getCurrentWeek(MyApplicationLike.configData.termBeginsTime))
+        timetableView.isShowWeekends(MyApplicationLike.configData.isShowWeekday)
+        timetableView.maxSlideItem(MyApplicationLike.configData.classesOfDay)
         timetableView.changeWeek(week, true)
         timetableView.showView()
         var tempWeek = 0
         timetableView.onDateBuildListener().onUpdateDate(
-                if (DateUtils.getCurrentWeek(MyApplication.configData.termBeginsTime).also {
+                if (DateUtils.getCurrentWeek(MyApplicationLike.configData.termBeginsTime).also {
                             tempWeek = it
                             /*Log.i("Schedule",it.toString())*/
                         } < 0)

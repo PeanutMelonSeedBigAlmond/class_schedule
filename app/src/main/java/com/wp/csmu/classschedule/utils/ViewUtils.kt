@@ -5,7 +5,7 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 
 object ViewUtils {
-    public fun getScreenPixels(context: Context): IntArray {
+    fun getScreenPixels(context: Context): IntArray {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)

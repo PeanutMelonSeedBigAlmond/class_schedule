@@ -11,17 +11,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.google.android.material.snackbar.Snackbar
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.SettingActivity
-import com.wp.csmu.classschedule.application.MyApplication
+import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.io.IO
-import kotlinx.android.synthetic.main.activity_setting.*
 import net.nashlegend.anypref.AnyPref
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.system.exitProcess
 
 class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
     val CROP_CODE = 1
@@ -31,10 +28,6 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
     lateinit var classesOfDay: Preference
     lateinit var termBeginTime: Preference
     lateinit var setBackground: Preference
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.schedule_setting_fragment_prefences)
@@ -105,7 +98,7 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
         val tv3 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView3)
         val seekBar = view.findViewById<SeekBar>(R.id.weeksClassesSelectorSeekBar)
         seekBar.max = 50
-        seekBar.progress = MyApplication.configData.weeksOfTerm
+        seekBar.progress = MyApplicationLike.configData.weeksOfTerm
         tv1.text = seekBar.progress.toString()
         tv2.text = "0"
         tv3.text = seekBar.max.toString()
@@ -123,14 +116,14 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
             }
         })
         builder.setTitle("学期周数").setView(view).setPositiveButton("确定") { _, _ ->
-            MyApplication.configData.weeksOfTerm = seekBar.progress
-            AnyPref.put(MyApplication.configData)
+            MyApplicationLike.configData.weeksOfTerm = seekBar.progress
+            AnyPref.put(MyApplicationLike.configData)
             (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
-                    MyApplication.configData.weeksOfTerm = 20
-                    AnyPref.put(MyApplication.configData)
+                    MyApplicationLike.configData.weeksOfTerm = 20
+                    AnyPref.put(MyApplicationLike.configData)
                     (requireActivity() as SettingActivity).showRestartTip()
                 }
                 .show()
@@ -144,7 +137,7 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
         val tv3 = view.findViewById<TextView>(R.id.weeksClassesSelectorTextView3)
         val seekBar = view.findViewById<SeekBar>(R.id.weeksClassesSelectorSeekBar)
         seekBar.max = 20
-        seekBar.progress = MyApplication.configData.classesOfDay
+        seekBar.progress = MyApplicationLike.configData.classesOfDay
         tv1.text = seekBar.progress.toString()
         tv2.text = "0"
         tv3.text = seekBar.max.toString()
@@ -162,14 +155,14 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
             }
         })
         builder.setTitle("一天课程数").setView(view).setPositiveButton("确定") { _, _ ->
-            MyApplication.configData.classesOfDay = seekBar.progress
-            AnyPref.put(MyApplication.configData)
+            MyApplicationLike.configData.classesOfDay = seekBar.progress
+            AnyPref.put(MyApplicationLike.configData)
             (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
-                    MyApplication.configData.classesOfDay = seekBar.progress
-                    AnyPref.put(MyApplication.configData)
+                    MyApplicationLike.configData.classesOfDay = seekBar.progress
+                    AnyPref.put(MyApplicationLike.configData)
                     (requireActivity() as SettingActivity).showRestartTip()
                 }
                 .show()
@@ -181,21 +174,21 @@ class ScheduleSettingFragment : PreferenceFragmentCompat(), Preference.OnPrefere
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.term_begins_time_selector, null)
         val datePicker = view.findViewById<DatePicker>(R.id.termBeginsTimeSelectorDatePicker)
         val sdf = SimpleDateFormat("yyyy-MM-dd")
-        val time = MyApplication.configData.termBeginsTime
+        val time = MyApplicationLike.configData.termBeginsTime
         val date = Calendar.getInstance()
         date.time = sdf.parse(time)
         datePicker.init(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH)) { _, _, _, _ -> }
 
         builder.setTitle("开学日期").setView(view).setPositiveButton("确定") { _, _ ->
-            MyApplication.configData.termBeginsTime = "${datePicker.year}-${datePicker.month + 1}-${datePicker.dayOfMonth}"
-            AnyPref.put(MyApplication.configData)
+            MyApplicationLike.configData.termBeginsTime = "${datePicker.year}-${datePicker.month + 1}-${datePicker.dayOfMonth}"
+            AnyPref.put(MyApplicationLike.configData)
             (requireActivity() as SettingActivity).showRestartTip()
         }
                 .setNegativeButton("取消") { _, _ -> }
                 .setNeutralButton("恢复默认") { _, _ ->
                     run {
-                        MyApplication.configData.termBeginsTime = ""
-                        AnyPref.put(MyApplication.configData)
+                        MyApplicationLike.configData.termBeginsTime = ""
+                        AnyPref.put(MyApplicationLike.configData)
                         (requireActivity() as SettingActivity).showRestartTip()
                     }
                 }

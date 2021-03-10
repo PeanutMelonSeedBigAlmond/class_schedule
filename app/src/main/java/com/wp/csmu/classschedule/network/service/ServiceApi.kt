@@ -1,8 +1,6 @@
 package com.wp.csmu.classschedule.network.service
 
-import kotlinx.coroutines.Deferred
 import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.http.*
 
 internal interface ServiceApi {
@@ -13,7 +11,7 @@ internal interface ServiceApi {
     @POST("xskb/xskb_list.do")
     @FormUrlEncoded
     suspend fun getSchedule(
-            @Field("xnxq01id") termId: String=""
+            @Field("xnxq01id") termId: String = ""
     ): ResponseBody
 
     @POST("kscj/cjcx_list")
