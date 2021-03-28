@@ -15,6 +15,7 @@ import com.tencent.bugly.beta.Beta
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.activity.BaseActivity
 import com.wp.csmu.classschedule.activity.loginactivity.LoginActivity
+import com.wp.csmu.classschedule.network.NetworkConfig
 
 class SettingFragment : Fragment() {
     lateinit var listView: ListView
@@ -56,6 +57,7 @@ class SettingFragment : Fragment() {
             val editor = sharedPreferences.edit()
             editor.clear()
             editor.commit()
+            NetworkConfig.cookie=""
             BaseActivity().finishAllActivity()
             startActivity(Intent(activity, LoginActivity::class.java))
         }.setNegativeButton("取消") { dialog, which -> }

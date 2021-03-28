@@ -16,15 +16,16 @@ object LoginClient {
         if (NetworkConfig.cookie == "") {
             val cookie = runBlocking { CookieClient.getCookie() }
             tempCookie = cookie
-            val newRequest = request.newBuilder()
-                    .removeHeader("cookie")
-                    .addHeader("cookie", cookie)
-                    .removeHeader("referer")
-                    .addHeader("referer", LoginApi.BASE_URL)
-                    .build()
-            return@addInterceptor it.proceed(newRequest)
         }
-        return@addInterceptor it.proceed(request)
+        val newRequest = request.newBuilder()
+                .removeHeader("user-agent")
+                .addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36")
+                .removeHeader("cookie")
+                .addHeader("cookie", tempCookie)
+                .removeHeader("referer")
+                .addHeader("referer", LoginApi.BASE_URL)
+                .build()
+        return@addInterceptor it.proceed(newRequest)
     }.build()
 
     private val retrofit = Retrofit.Builder()

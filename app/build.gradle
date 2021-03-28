@@ -12,7 +12,7 @@ def date = now.get(Calendar.DATE)
 def appVersionCode = Integer.valueOf(String.format("%02d%02d%02d", year, month, date))
 
 // 版本名
-def appVersionName = "1.2.1"
+def appVersionName = "1.2.2"
 
 // bugly AppId
 def buglyAppId = System.getenv("CLASSSCHEDULEAPPID") ?: ""

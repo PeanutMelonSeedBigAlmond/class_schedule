@@ -20,7 +20,7 @@ internal interface ServiceApi {
             @Field("kksj") term: String,
             @Field("kcxz") classAttr: String = "",
             @Field("kcmc") className: String = "",
-            @Field("xsfs") orderBy: String = ""
+            @Field("xsfs") orderBy: String = "all"
     ): ResponseBody
 
     @GET("jxzl/jxzl_query")

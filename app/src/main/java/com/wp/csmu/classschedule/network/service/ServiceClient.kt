@@ -23,6 +23,8 @@ object ServiceClient {
                     }
                 }
                 val newRequest = request.newBuilder()
+                        .removeHeader("user-agent")
+                        .addHeader("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36")
                         .removeHeader("cookie")
                         .addHeader("cookie", NetworkConfig.cookie)
                         .removeHeader("referer")
