@@ -1,0 +1,28 @@
+version: 2
+updates:
+- package-ecosystem: gradle
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  target-branch: dev
+  ignore:
+  - dependency-name: com.tencent.tinker:tinker-android-lib
+    versions:
+    - 1.9.14.11
+    - 1.9.14.12
+    - 1.9.14.13
+    - 1.9.14.14
+    - 1.9.14.15
+  - dependency-name: androidx.recyclerview:recyclerview
+    versions:
+    - 1.2.0-rc01
+  - dependency-name: com.squareup.leakcanary:leakcanary-android
+    versions:
+    - "2.6"
+  - dependency-name: com.android.tools.build:gradle
+    versions:
+    - 4.1.2
+  - dependency-name: org.jetbrains.kotlinx:kotlinx-coroutines-android
+    versions:
+    - 1.4.2-native-mt
