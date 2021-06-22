@@ -2,7 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/scoreMenuSelectTerm"
-        android:title="选择学期"
-        app:showAsAction="never"/>
+        android:icon="@drawable/ic_action_filter"
+        android:id="@+id/scoreMenuFilter"
+        android:title="筛选"
+        app:showAsAction="always"/>
 </menu>

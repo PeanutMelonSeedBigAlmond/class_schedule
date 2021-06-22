@@ -1,16 +1,19 @@
 package com.wp.csmu.classschedule.network.service
 
+import android.util.Log
 import com.wp.csmu.classschedule.application.MyApplicationLike
 import com.wp.csmu.classschedule.exception.InvalidPasswordException
 import com.wp.csmu.classschedule.network.LoginState
 import com.wp.csmu.classschedule.network.NetworkConfig
 import com.wp.csmu.classschedule.network.login.LoginClient
 import com.wp.csmu.classschedule.view.bean.Score
+import com.wp.csmu.classschedule.view.bean.ScoreFilterBean
 import com.wp.csmu.classschedule.view.scheduletable.Subjects
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 import retrofit2.Retrofit
+import java.lang.Exception
 
 object ServiceClient {
     private val client = OkHttpClient.Builder()
@@ -24,7 +27,7 @@ object ServiceClient {
                 }
                 val newRequest = request.newBuilder()
                         .removeHeader("user-agent")
-                        .addHeader("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36")
+                        .addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36")
                         .removeHeader("cookie")
                         .addHeader("cookie", NetworkConfig.cookie)
                         .removeHeader("referer")
@@ -63,6 +66,71 @@ object ServiceClient {
             map[pair] = selected
         }
         return map
+    }
+
+
+    private suspend fun getGradeQueryPageSource(): String = retrofit.getGradeQuery().string()
+
+    suspend fun getGradeQueryFilter(): ScoreFilterBean {
+        val html = getGradeQueryPageSource()
+        val termId = getExamTermId(html)
+        val courseXZ = getCourseXZ(html)
+        val displayMode = getDisplayMode(html)
+        return ScoreFilterBean(termId, courseXZ, displayMode)
+    }
+
+    /**
+     * 获取学期id,考试页面
+     * @return HashMap<Pair<String, String>, Boolean> （学期id - 学期名称）- 是否选中
+     */
+    private fun getExamTermId(pageSource: String): LinkedHashMap<Pair<String, String>, Boolean> {
+        val document = Jsoup.parse(pageSource)
+        val data = LinkedHashMap<Pair<String, String>, Boolean>()
+        val option = document.select("#kksj > option")
+        for (op in option) {
+            val id = op.attr("value")
+            val text = op.text()
+            val selected = op.hasAttr("selected")
+            data[Pair<String, String>(id, text)] = selected;
+        }
+        return data
+    }
+
+    /**
+     * 获取课程性质,考试页面
+     * @return LinkedHashMap<String,String> 选项id - 选项名称
+     */
+    private fun getCourseXZ(pageSource: String): LinkedHashMap<Pair<String, String>, Boolean> {
+        val document = Jsoup.parse(pageSource)
+        val data = LinkedHashMap<Pair<String, String>, Boolean>()
+        val option = document.select("#kcxz > option")
+        data[Pair("", "全部课程")] = true // 默认显示全部性质课程
+        for (op in option) {
+            val id = op.attr("value")
+            if (id == "") {
+                continue
+            }
+            val text = op.text()
+            data[Pair(id, text)] = false
+        }
+        return data
+    }
+
+    /**
+     * 显示方式，考试页面
+     * @param pageSource String
+     * @return LinkedHashMap<Pair<String,String>,Boolean>
+     */
+    private fun getDisplayMode(pageSource: String): LinkedHashMap<Pair<String, String>, Boolean> {
+        val document = Jsoup.parse(pageSource)
+        val data = LinkedHashMap<Pair<String, String>, Boolean>()
+        val option = document.select("#xsfs > option")
+        for (op in option) {
+            val id = op.attr("value")
+            val text = op.text()
+            data[Pair(id, text)] = id == "all" // 默认显示全部成绩
+        }
+        return data
     }
 
     suspend fun getScheduleList(termId: String = ""): HashSet<Subjects> {
@@ -132,14 +200,18 @@ object ServiceClient {
         return weekList
     }
 
-    suspend fun queryGrades(termId: String): ArrayList<Score> {
-        val html = retrofit.getGrades(termId).string()
+    suspend fun queryGrades(termId: String, courseXZ: String, displayMode: String): LinkedHashSet<Score> {
+        val html = retrofit.getGrades(
+                term = termId,
+                classAttr = courseXZ,
+                orderBy = displayMode
+        ).string()
         val document = Jsoup.parse(html)
         val gradeTableHtml = document.select("#dataList > tbody > tr")
         if (gradeTableHtml.size == 2 && gradeTableHtml[1].text() == "未查询到数据") {
-            return ArrayList()
+            return LinkedHashSet()
         }
-        val scores = ArrayList<Score>()
+        val scores = LinkedHashSet<Score>()
         gradeTableHtml.drop(1).forEach { rowHtml ->
             val tds = rowHtml.select("td")
             val term = tds[1].text()
@@ -155,5 +227,18 @@ object ServiceClient {
             scores.add(Score(term, name, score, skillScores, performanceScore, knowledgePoints, credits, examAttribute, subjectNature, subjectAttribute))
         }
         return scores
+    }
+
+    suspend fun queryAllXZGrades(termId: String, courseXZ: ArrayList<String>, displayMode: String): LinkedHashSet<Score> {
+        val data = LinkedHashSet<Score>()
+        for (c in courseXZ) {
+            try {
+                data.addAll(queryGrades(termId, c, displayMode))
+            }catch (e:Exception){
+                Log.e("ServiceClient","课程性质$c 查询失败")
+                e.printStackTrace()
+            }
+        }
+        return data
     }
 }

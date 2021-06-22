@@ -3,11 +3,12 @@ package com.wp.csmu.classschedule.activity
 import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -19,12 +20,14 @@ import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.network.service.ServiceClient
 import com.wp.csmu.classschedule.view.adapter.ScoreRecyclerAdapter
 import com.wp.csmu.classschedule.view.bean.Score
+import com.wp.csmu.classschedule.view.bean.ScoreFilterBean
 import com.wp.csmu.classschedule.view.utils.BindView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.collections.LinkedHashSet
 
 class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     @BindView(R.id.scoreRecyclerView)
@@ -39,11 +42,10 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     @BindView(R.id.scoreSwipeRefreshLayout)
     internal var swipeRefreshLayout: SwipeRefreshLayout? = null
     lateinit var adapter: ScoreRecyclerAdapter
-    lateinit var data: ArrayList<Score>
-    private var termName = ArrayList<String>()
-    private var termId = ArrayList<String>()
+    lateinit var data: LinkedHashSet<Score>
 
-    private var clickedItem: Int = 0
+    lateinit var filterBean: ScoreFilterBean
+    private val filterTemp = Array(3) { 0 } // 存储用户的筛选选项，学期id、课程性质，显示方式
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,10 +59,14 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         //设置动画
         recyclerView!!.itemAnimator = DefaultItemAnimator()
         //初始化适配器
-        adapter = ScoreRecyclerAdapter(ArrayList(), this)
+        adapter = ScoreRecyclerAdapter(LinkedHashSet(), this)
         recyclerView!!.adapter = adapter
-        swipeRefreshLayout!!.setOnRefreshListener { getScore1() }
-        getScore(true)
+        swipeRefreshLayout!!.setOnRefreshListener {
+            GlobalScope.launch(Dispatchers.Main) {
+                getScore1()
+            }
+        }
+        getScore()
     }
 
     override fun onClick(view: View, position: Int) {
@@ -73,7 +79,7 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         val skillGrade = view1.findViewById<TextView>(R.id.scoreInfoDialogSkillGrade)
         val performanceGrade = view1.findViewById<TextView>(R.id.scoreInfoDialogPerformanceGrade)
         val knowledgePoints = view1.findViewById<TextView>(R.id.scoreInfoDialogKnowledgePoints)
-        val (term1, _, _, skillScores, performanceScore, knowledgePoints1, credits, examAttribute, subjectNature1, subjectAttribute) = data[position]
+        val (term1, courseName, _, skillScores, performanceScore, knowledgePoints1, credits, examAttribute, subjectNature1, subjectAttribute) = data.elementAt(position)
 
         credit.text = credits.toString() + "分"
         term.text = term1
@@ -89,22 +95,22 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         if (knowledgePoints.text.toString() != "" && knowledgePoints.text.toString().toDouble() < 60.0) knowledgePoints.setTextColor(Color.RED)
 
         val dialog = AlertDialog.Builder(this).setView(view1)
-                .setTitle(data[position].name).setNegativeButton("确定") { _, _ -> }
+                .setTitle(courseName).setNegativeButton("确定") { _, _ -> }
         dialog.show()
     }
 
     // [useDefault]=true表示第一次启动时
-    private fun getScore(useDefault: Boolean = false) {
+    private fun getScore() {
         GlobalScope.launch(Dispatchers.Main) {
+            swipeRefreshLayout!!.isRefreshing = true
             try {
-                swipeRefreshLayout!!.isRefreshing = true
-                val terms = withContext(Dispatchers.IO) { ServiceClient.getTermId() }
-                termId = terms.keys.map { it.first }.toMutableList().also { it.add(0, "") } as ArrayList<String>
-                termName = terms.keys.map { it.second }.toMutableList().also { it.add(0, "全部学期") } as ArrayList<String>
-                if (useDefault) {
-                    clickedItem = terms.findValue(true) + 1
-                }
-                withContext(Dispatchers.IO) { getScore1() }
+                filterBean = withContext(Dispatchers.IO) { ServiceClient.getGradeQueryFilter() }
+
+                filterTemp[0] = filterBean.termId.findValueIndex(true)
+                filterTemp[1] = filterBean.courseXZ.findValueIndex(true)
+                filterTemp[2] = filterBean.displayMode.findValueIndex(true)
+
+                getScore1()
             } catch (e: Exception) {
                 e.printStackTrace()
                 onOperationFailed(e)
@@ -119,32 +125,93 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.scoreMenuSelectTerm -> selectTerm()
+            R.id.scoreMenuFilter -> {
+                if (this::filterBean.isInitialized) {
+                    showFilter()
+                }
+            }
             else -> {
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-    internal fun selectTerm() {
-        val build = AlertDialog.Builder(this).setTitle("选择学期").setSingleChoiceItems(termName.toTypedArray(), clickedItem) { dialog, which ->
-            clickedItem = which
-            getScore()
-            dialog.dismiss()
-        }.setNegativeButton("取消") { dialog, which -> }
-        build.show()
+    private fun showFilter() {
+        val filterView = layoutInflater.inflate(R.layout.score_filter_dialog_layout, null)
+
+        filterView.findViewById<Spinner>(R.id.termFilterSpinner).apply { initSpinner(0, this, filterBean.termId) }
+        filterView.findViewById<Spinner>(R.id.courseXZFilterSpinner).apply { initSpinner(1, this, filterBean.courseXZ) }
+        filterView.findViewById<Spinner>(R.id.displayModeFilterSpinner).apply { initSpinner(2, this, filterBean.displayMode) }
+
+        val dialog = AlertDialog.Builder(this).also {
+            it.setView(filterView)
+            it.setTitle("筛选")
+            it.setPositiveButton("确定") { _, _ ->
+                GlobalScope.launch(Dispatchers.Main) {
+                    getScore1()
+                }
+            }
+        }
+        dialog.setOnCancelListener {
+            filterTemp[0] = filterBean.termId.findValueIndex(true)
+            filterTemp[1] = filterBean.courseXZ.findValueIndex(true)
+            filterTemp[2] = filterBean.displayMode.findValueIndex(true)
+        }
+        dialog.show()
     }
 
-    private fun getScore1() {
-        GlobalScope.launch(Dispatchers.Main) {
-            try {
-                swipeRefreshLayout!!.isRefreshing = true
-                data = withContext(Dispatchers.IO) { ServiceClient.queryGrades(termId[clickedItem]) }
-                onOperationSucceed()
-            } catch (e: Exception) {
-                e.printStackTrace()
+    private fun initSpinner(index: Int, spinner: Spinner, item: LinkedHashMap<Pair<String, String>, Boolean>) {
+        val adapter = ArrayAdapter(
+                this@ScoreActivity,
+                android.R.layout.simple_spinner_item,
+                item.keys.map { it.second }
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+        spinner.setSelection(filterTemp[index])
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                filterTemp[index] = position
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+        }
+    }
+
+    private suspend fun getScore1(): Boolean {
+        if (!this::filterBean.isInitialized) {
+            getScore()
+            return true
+        }
+        try {
+            withContext(Dispatchers.Main) { swipeRefreshLayout!!.isRefreshing = true }
+            data = withContext(Dispatchers.IO) {
+                Log.i("ScoreActivity", "paused")
+                if (filterBean.courseXZ.keys.elementAt(filterTemp[1]).first == "") { // 如果查询全部性质成绩
+                    val list = filterBean.courseXZ.keys.map { it.first }.drop(1) as ArrayList
+                    ServiceClient.queryAllXZGrades(
+                            filterBean.termId.keys.elementAt(filterTemp[0]).first,
+                            list,
+                            filterBean.displayMode.keys.elementAt(filterTemp[2]).first
+                    )
+                } else {
+                    ServiceClient.queryGrades(
+                            filterBean.termId.keys.elementAt(filterTemp[0]).first,
+                            filterBean.courseXZ.keys.elementAt(filterTemp[1]).first,
+                            filterBean.displayMode.keys.elementAt(filterTemp[2]).first
+                    )
+                }
+            }
+            withContext(Dispatchers.Main) { onOperationSucceed() }
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
                 onOperationFailed(e)
             }
+            return false
         }
     }
 
@@ -152,10 +219,20 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
         swipeRefreshLayout!!.isRefreshing = false
         adapter.updateData(data)
         recyclerView!!.scrollToPosition(0)
-        supportActionBar!!.subtitle = termName[clickedItem]
+        filterBean.termId.assignElementTrue(filterTemp[0])
+        filterBean.courseXZ.assignElementTrue(filterTemp[1])
+        filterBean.displayMode.assignElementTrue(filterTemp[2])
+        setToolbarSubtitle()
         if (data.size == 0) {
             Snackbar.make(coordinatorLayout!!, "暂无信息", Snackbar.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setToolbarSubtitle() {
+        val term = filterBean.termId.findKey(true)?.second
+        val courseXZ = filterBean.courseXZ.findKey(true)?.second
+        val displayMode = filterBean.displayMode.findKey(true)?.second
+        supportActionBar!!.subtitle = "$term / $courseXZ / $displayMode"
     }
 
     private fun onOperationFailed(reason: Exception) {
@@ -164,7 +241,7 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
     }
 
     // 寻找map中第一次出现value的index
-    private fun <K, V> Map<K, V>.findValue(value: V): Int {
+    private fun <K, V> Map<K, V>.findValueIndex(value: V): Int {
         var index = 0
         this.entries.forEachIndexed { i, entry ->
             if (entry.value == value) {
@@ -173,5 +250,24 @@ class ScoreActivity : BaseActivity(), ScoreRecyclerAdapter.OnClickListener {
             }
         }
         return index
+    }
+
+    private fun <K, V> Map<K, V>.findKey(value: V): K? {
+        var key: K? = null
+        this.entries.forEach { entry ->
+            if (entry.value == value) {
+                key = entry.key
+                return@forEach
+            }
+        }
+        return key
+    }
+
+    private fun <K> HashMap<K, Boolean>.assignElementTrue(index: Int) {
+        var count = 0
+        this.forEach {
+            this[it.key] = count == index
+            count++
+        }
     }
 }

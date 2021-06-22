@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.wp.csmu.classschedule.R
 import com.wp.csmu.classschedule.view.bean.Score
 
-class ScoreRecyclerAdapter(private var data: List<Score>?, private val listener: OnClickListener) : RecyclerView.Adapter<ScoreRecyclerAdapter.ViewHolder>() {
+class ScoreRecyclerAdapter(private var data: LinkedHashSet<Score>?, private val listener: OnClickListener) : RecyclerView.Adapter<ScoreRecyclerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.score_recyclerview_item, parent, false)
@@ -17,11 +17,11 @@ class ScoreRecyclerAdapter(private var data: List<Score>?, private val listener:
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.subjectName.text = data!![position].name
-        holder.score.text = data!![position].score
+        holder.subjectName.text = data!!.elementAt(position).name
+        holder.score.text = data!!.elementAt(position).score
         try {
             android.R.attr.textViewStyle
-            if (data!![position].score.toDouble() < 60.0)
+            if (data!!.elementAt(position).score.toDouble() < 60.0)
                 holder.score.setTextColor(Color.RED)
             else
                 holder.score.setTextColor((0x8f_00_00_00).toInt())
@@ -34,7 +34,7 @@ class ScoreRecyclerAdapter(private var data: List<Score>?, private val listener:
         return if (data == null) 0 else data!!.size
     }
 
-    fun updateData(newData: List<Score>) {
+    fun updateData(newData: LinkedHashSet<Score>) {
         this.data = newData
         notifyDataSetChanged()
     }

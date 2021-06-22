@@ -28,4 +28,7 @@ internal interface ServiceApi {
             @Query("xnxq01id") termId: String = "",
             @Header("referer") referer: String = BASE_URL + "jxzl/jxzl_query"
     ): ResponseBody
+
+    @POST("kscj/cjcx_query")
+    suspend fun getGradeQuery():ResponseBody
 }
